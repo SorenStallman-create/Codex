@@ -1,6 +1,6 @@
 # Codex handoff: Trading Lab
 
-Date: 2026-09-19
+Date: 2026-09-20
 Project: paper-only strategy research and Alpaca paper-forward measurement
 
 ## Original goal
@@ -14,7 +14,7 @@ rules to decide whether the line continues to 250 sessions or is archived.
 
 No live-money trading is enabled by this project.
 
-## Highest-priority future implementation: research-driven self-improving agent
+## HIGH PRIORITY: research-driven self-improving agent
 
 The user wants the missing research-driven model implemented after the frozen
 deterministic paper measurement is underway. This is the "Luna"-style model
@@ -24,13 +24,35 @@ records its thesis, evidence, confidence, invalidation conditions, and result.
 It must feed the same quote-aware paper execution gates before any order path is
 considered.
 
-The newly supplied video is Lewis Jackson's *How To Build A Self-Improving AI
-Trading Agent* (YouTube `6njREUQAFdg`). Its useful design ideas are: accurate
-data, reliable 24/7 operation, an explicit goal with success and failure
-conditions, and a feedback loop that tests one variable at a time using a
-baseline, hypothesis, and measured result. The video describes Hermes Agent,
-daily and 30-minute Bittensor experiments, and self-modification; its live
-claims are not independent evidence and must not be copied into production.
+The supplied inspiration is the video [*how to literally print money while you
+sleep with AI dropshipping (just copy me)*](https://www.youtube.com/watch?v=ScF0pi6FSLQ).
+The transferable idea is the operating loop, not the video's income claim:
+
+- **Autonomous testing loop:** generate candidate strategies or variants, test
+  them, measure the result, review the evidence, and queue the next experiment.
+- **Data-driven iteration:** preserve the inputs, assumptions, baseline,
+  hypothesis, and outcome; change one material variable at a time and compare
+  against an untouched validation window.
+- **Product/strategy testing analogy:** treat product variants and market
+  strategies as testable candidates with explicit metrics, while recognizing
+  that market data are noisy and do not guarantee repeatable demand or returns.
+- **Scale only proven winners:** promote a strategy only after it clears
+  pre-registered out-of-sample and quote-aware paper gates; increasing capital is
+  never the default response to a short winning streak.
+- **Kill losers quickly:** archive candidates that fail their declared tests or
+  risk limits, record why they failed, and do not resurrect them through
+  untracked parameter changes.
+- **Automated research and review:** automate data collection, timestamped
+  research, trade/thesis journaling, result attribution, report generation, and
+  a human-readable review queue; keep the decision and evidence log immutable.
+- **Strict risk gates before real-money execution:** maintain paper-only and
+  shadow modes first, enforce position/exposure limits, quote-age and spread
+  checks, cost stress, drawdown limits, reconciliation, and a kill switch, and
+  require independent review before any live order path is even considered.
+
+This source is a workflow inspiration, not independent evidence of trading
+profitability or financial advice. Its claims must not be copied into
+production without measurement.
 
 Implementation priority, in order:
 
