@@ -1,0 +1,28 @@
+{
+  "no_live_orders": true,
+  "preregistration": {
+    "run_id": "phase2_paper_20260919",
+    "spec_hash": "2cb4e52faa9b406caf093340bcea2d870c7906b0e8ea0f26a477a2b30f8121de"
+  },
+  "signal_frozen": true,
+  "status": "paper_measurement_active",
+  "summary": {
+    "completed_sessions": 0,
+    "completed_trades": 0,
+    "decision": "WAITING_FOR_60_COMPLETED_SESSIONS",
+    "ledger": "research/overnight_equities/paper/fills.csv",
+    "median_round_trip_bps": null,
+    "minimum_sessions": 60,
+    "p75_round_trip_bps": null,
+    "reconciliation": {
+      "completed_trades": [],
+      "errors": [],
+      "groups": 0,
+      "ok": true,
+      "rows": 0
+    },
+    "round_trip_slippage_bps": [],
+    "rows": 0
+  },
+  "updated_utc": "2026-09-19T18:28:35.277250+00:00"
+}

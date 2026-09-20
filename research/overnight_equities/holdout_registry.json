@@ -1,0 +1,74 @@
+{
+  "bootstrapped_from": "/Users/sorenstallman/Documents/Codex/2026-09-16/https-www-youtube-com-watch-v-4/outputs/trading-lab/research/overnight_equities/results.json",
+  "entries": [
+    {
+      "end_exclusive": "2020-01-01",
+      "first_run_id": "pre_phase1_existing_report",
+      "first_scored_utc": "2026-09-19T16:07:03.870676+00:00",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::development::2015-01-01::2020-01-01",
+      "period": "development",
+      "start": "2015-01-01",
+      "universe_hash": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9"
+    },
+    {
+      "end_exclusive": "2025-01-01",
+      "first_run_id": "pre_phase1_existing_report",
+      "first_scored_utc": "2026-09-19T16:07:03.870676+00:00",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::holdout::2022-01-01::2025-01-01",
+      "period": "holdout",
+      "start": "2022-01-01",
+      "universe_hash": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9"
+    },
+    {
+      "end_exclusive": "2026-09-19",
+      "first_run_id": "pre_phase1_existing_report",
+      "first_scored_utc": "2026-09-19T16:07:03.870676+00:00",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::recent::2025-01-01::2026-09-19",
+      "period": "recent",
+      "start": "2025-01-01",
+      "universe_hash": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9"
+    },
+    {
+      "end_exclusive": "2022-01-01",
+      "first_run_id": "pre_phase1_existing_report",
+      "first_scored_utc": "2026-09-19T16:07:03.870676+00:00",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::validation::2020-01-01::2022-01-01",
+      "period": "validation",
+      "start": "2020-01-01",
+      "universe_hash": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9"
+    }
+  ],
+  "events": [
+    {
+      "event": "reopened",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::holdout::2022-01-01::2025-01-01",
+      "reason": "Phase 1 benchmark and power migration",
+      "run_id": "phase1_overnight_20260919",
+      "time_utc": "2026-09-19T16:07:08.594362+00:00"
+    },
+    {
+      "event": "reopened",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::recent::2025-01-01::2026-09-19",
+      "reason": "Phase 1 benchmark and power migration",
+      "run_id": "phase1_overnight_20260919",
+      "time_utc": "2026-09-19T16:07:08.594362+00:00"
+    },
+    {
+      "event": "reopened",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::holdout::2022-01-01::2025-01-01",
+      "reason": "Phase 1 benchmark and power migration",
+      "run_id": "phase1_overnight_20260919",
+      "time_utc": "2026-09-19T16:08:24.048125+00:00"
+    },
+    {
+      "event": "reopened",
+      "key": "85983d4d8efd059e2f3aedfdc7afb0e06728f10532021d7e65a6a2399e60f3d9::recent::2025-01-01::2026-09-19",
+      "reason": "Phase 1 benchmark and power migration",
+      "run_id": "phase1_overnight_20260919",
+      "time_utc": "2026-09-19T16:08:24.048125+00:00"
+    }
+  ],
+  "last_checked_utc": "2026-09-19T16:08:24.048125+00:00",
+  "last_run_id": "phase1_overnight_20260919",
+  "version": 1
+}

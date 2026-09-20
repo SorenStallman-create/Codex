@@ -1,0 +1,98 @@
+{
+  "run": {
+    "allocation_per_model": 0.25,
+    "capital": 10000.0,
+    "data_end": "2026-09-18",
+    "entry": "regular-session close",
+    "exit": "next regular-session open",
+    "fee_each_side": 0.0,
+    "sessions_per_window": 90,
+    "slippage_each_side": 0.0005,
+    "total_allocation": 0.5,
+    "windows": {
+      "prior_90": {
+        "exit": "2026-05-11",
+        "last_entry": "2026-05-08",
+        "start": "2025-12-30"
+      },
+      "recent_90": {
+        "exit": "2026-09-18",
+        "last_entry": "2026-09-17",
+        "start": "2026-05-11"
+      }
+    }
+  },
+  "selection": {
+    "all_validation_candidates": [
+      {
+        "model": "overnight_momentum",
+        "name": "Overnight momentum",
+        "rank": 1,
+        "selected": true,
+        "validation_drawdown_pct": 36.56004950512277,
+        "validation_quality": 32.62434612711902,
+        "validation_return_pct": 50.782680891418906
+      },
+      {
+        "model": "overnight_reversal",
+        "name": "Intraday reversal into the close",
+        "rank": 2,
+        "selected": true,
+        "validation_drawdown_pct": 35.23226115244004,
+        "validation_quality": 30.37201329094699,
+        "validation_return_pct": 47.863652698581504
+      },
+      {
+        "model": "relative_strength",
+        "name": "Market-relative strength",
+        "rank": 3,
+        "selected": false,
+        "validation_drawdown_pct": 34.38861708602112,
+        "validation_quality": 25.393830529317682,
+        "validation_return_pct": 42.46644908406674
+      },
+      {
+        "model": "ensemble",
+        "name": "Risk-adjusted ensemble",
+        "rank": 4,
+        "selected": false,
+        "validation_drawdown_pct": 28.5187307370945,
+        "validation_quality": -10.284344086118987,
+        "validation_return_pct": 3.853331294166762
+      },
+      {
+        "model": "close_strength",
+        "name": "Close strength",
+        "rank": 5,
+        "selected": false,
+        "validation_drawdown_pct": 35.45439547988395,
+        "validation_quality": -40.739795203475246,
+        "validation_return_pct": -23.134287451794776
+      }
+    ],
+    "candidate_count": 5,
+    "fraction": 0.3,
+    "method": "top validation quality, frozen before holdout and recent windows",
+    "selected_count": 2,
+    "selected_models": [
+      {
+        "model": "overnight_momentum",
+        "name": "Overnight momentum",
+        "rank": 1,
+        "selected": true,
+        "validation_drawdown_pct": 36.56004950512277,
+        "validation_quality": 32.62434612711902,
+        "validation_return_pct": 50.782680891418906
+      },
+      {
+        "model": "overnight_reversal",
+        "name": "Intraday reversal into the close",
+        "rank": 2,
+        "selected": true,
+        "validation_drawdown_pct": 35.23226115244004,
+        "validation_quality": 30.37201329094699,
+        "validation_return_pct": 47.863652698581504
+      }
+    ]
+  }
+}

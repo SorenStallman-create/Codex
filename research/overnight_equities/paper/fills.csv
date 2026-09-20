@@ -1,0 +1,1 @@
+date,symbol,model,side,intended_price,official_close,official_open,quoted_bid,quoted_ask,spread_bps,fill_price,slippage_vs_official_bps,notional,news_flag,quote_age_ms,partial_fill,error,trade_id,session_date,leg,timestamp_utc,gate_reason,order_id,fill_source

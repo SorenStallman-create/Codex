@@ -1,0 +1,50 @@
+# Python and local tooling
+__pycache__/
+*.py[cod]
+.venv/
+.venv-visual/
+venv/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+
+# Credentials and local configuration
+.env
+.env.*
+.env.example
+*.pem
+*.key
+*credentials*
+*secret*
+*token*
+
+# Runtime state and local logs
+state/
+*.log
+
+# Re-downloadable research inputs and large generated raw exports
+research/**/data/
+research/**/decision_log.csv
+research/**/trade_log.csv
+research/**/equity.csv
+research/**/daily_results.csv
+research/**/fills.csv
+!research/overnight_equities/paper/fills.csv
+research/overnight_equities/*.csv
+research/overnight_equities/focused_top30/*.csv
+
+# Temporary exports and archives
+*.zip
+tmp/
+
+# Older generated research bundles outside the current overnight handoff
+OVERNIGHT_STOCKS_INDEX.html
+research/btc_five_bots/
+research/btc_five_bots_first_pass/
+research/btc_live_five/
+research/focused_bot/
+research/intraday_v1/
+research/intraday_v2/
+research/repaired_replay/
+research/roh_guide_v1/
+research/weekly_*/

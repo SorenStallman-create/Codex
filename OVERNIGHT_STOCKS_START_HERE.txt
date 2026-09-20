@@ -1,0 +1,27 @@
+OVERNIGHT STOCK EXPERIMENT — 2026-09-19
+
+Open this first:
+research/overnight_equities/index.html
+
+What it tests:
+- choose one liquid U.S. stock after the regular-session close;
+- buy near the close;
+- sell at the next regular-session open;
+- repeat the ranking on the next session.
+
+Current evidence:
+- validation champion: Overnight momentum;
+- 2022–2024 holdout: the champion returned -31.71% after 5 bps/side slippage;
+- best holdout model: Intraday reversal into the close, +19.58%;
+- that model's max drawdown was 37.11% and its bootstrap lower bound was -41.48%;
+- no model passes the promotion gates.
+
+The last complete session's price/volume ranking is in
+research/overnight_equities/latest_signal.json. It is not an order instruction:
+the next session has not happened, and the historical run has no news gate.
+
+Alpaca/Benzinga news and paper-order integration is documented in
+ALPACA_INTEGRATION.md. No credentials are included and no live or paper order
+was submitted by this research run. The daily paper-forward signal loop is
+`overnight_daily.py`; it writes a news-gated `paper_signal.json` and defaults
+to no order submission.

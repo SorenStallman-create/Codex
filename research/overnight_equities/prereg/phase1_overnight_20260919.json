@@ -1,0 +1,110 @@
+{
+  "created_utc": "2026-09-19T16:06:53.699149+00:00",
+  "gates": [
+    "positive holdout return",
+    "maximum holdout drawdown at most 15 percent",
+    "positive 2x cost holdout return",
+    "bootstrap lower return bound above zero",
+    "Sharpe confidence interval lower bound above zero"
+  ],
+  "hypothesis": "A fixed liquid U.S. equity close-to-next-open ranking can produce a positive risk-adjusted return after modeled costs.",
+  "kill_condition": "Abandon the line if the holdout fails the preregistered gates or if the paper slippage rule kills the measured edge.",
+  "parameters": {
+    "allocation": 1.0,
+    "borrow_spread": 0.005,
+    "cash_rate": 0.04,
+    "entry": "regular-session close",
+    "exit": "next regular-session open",
+    "fee_each_side": 0.0,
+    "min_dollar_volume": 50000000.0,
+    "min_price": 10.0,
+    "models": [
+      "overnight_momentum",
+      "overnight_reversal",
+      "close_strength",
+      "relative_strength",
+      "ensemble"
+    ],
+    "slippage_each_side": 0.0005
+  },
+  "periods": {
+    "development": {
+      "end_exclusive": "2020-01-01",
+      "start": "2015-01-01"
+    },
+    "holdout": {
+      "end_exclusive": "2025-01-01",
+      "start": "2022-01-01"
+    },
+    "recent": {
+      "end_exclusive": "2026-09-19",
+      "start": "2025-01-01"
+    },
+    "validation": {
+      "end_exclusive": "2022-01-01",
+      "start": "2020-01-01"
+    }
+  },
+  "predicted_effect": {
+    "metric": "sharpe",
+    "range": [
+      0.05,
+      0.3
+    ],
+    "value": 0.15
+  },
+  "run_id": "phase1_overnight_20260919",
+  "source": "Overnight-return literature summarized in STRATEGY_RESEARCH.md plus an explicitly labeled research hypothesis.",
+  "spec_hash": "8f27293f9260b25eebd769b6588207eaffcd0521db050dca5b5fd033ce776cf6",
+  "strategy": "overnight_equities",
+  "universe": [
+    "SPY",
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMZN",
+    "META",
+    "GOOGL",
+    "AVGO",
+    "TSLA",
+    "JPM",
+    "WMT",
+    "LLY",
+    "V",
+    "ORCL",
+    "MA",
+    "XOM",
+    "COST",
+    "NFLX",
+    "JNJ",
+    "HD",
+    "PG",
+    "BAC",
+    "ABBV",
+    "KO",
+    "CRM",
+    "CVX",
+    "MRK",
+    "AMD",
+    "PEP",
+    "TMO",
+    "MCD",
+    "LIN",
+    "DIS",
+    "CSCO",
+    "IBM",
+    "GE",
+    "CAT",
+    "AMAT",
+    "QCOM",
+    "TXN",
+    "INTU",
+    "NOW",
+    "UBER",
+    "PLTR",
+    "GS",
+    "ISRG",
+    "BKNG",
+    "IWM"
+  ]
+}

@@ -1,0 +1,25 @@
+CURRENT BTC EXPERIMENT — 2026-09-18
+
+Open this first:
+research/btc_live_five/index.html
+
+This handoff contains only the current BTC five-bot experiment. It includes:
+- the 24/7 hourly live-style screen;
+- the strict 15-minute one-entry-per-UTC-day screen;
+- the visual comparison, raw candle files, decisions, fills, equity curves,
+  stress runs, frozen configurations, and manifests for those screens.
+
+Best holdout research candidates in the 24/7 screen:
+- Breakout Guard 20: +4.99% in the 2024 holdout;
+- Trend Guard 20: +4.54% in the 2024 holdout.
+
+Neither passes every promotion gate. The strict 15-minute screen has no
+passing candidate after modeled costs. These are historical paper results; the
+folder contains no exchange credentials and cannot place live orders.
+
+The 1-hour BTC spot source used by the live-style screen is at
+research/btc_live_five/data/BTCUSDT_1h.jsonl. The 15-minute BTC USD-M source is
+at research/btc_five_bots/data/BTCUSDT_15m.jsonl.
+
+The previous mixed handoff was moved beside this folder as an archive. It is
+not part of this current-only folder.

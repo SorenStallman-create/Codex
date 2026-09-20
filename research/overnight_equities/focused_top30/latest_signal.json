@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-18",
+  "models": [
+    {
+      "market_regime": true,
+      "model": "overnight_momentum",
+      "name": "Overnight momentum",
+      "next_session_available": false,
+      "score": 0.9130434782608696,
+      "symbol": "META",
+      "top_candidates": [
+        {
+          "score": 0.9130434782608696,
+          "symbol": "META"
+        },
+        {
+          "score": 0.8510869565217392,
+          "symbol": "CVX"
+        },
+        {
+          "score": 0.8336956521739131,
+          "symbol": "QCOM"
+        },
+        {
+          "score": 0.8228260869565216,
+          "symbol": "ORCL"
+        },
+        {
+          "score": 0.7913043478260869,
+          "symbol": "NVDA"
+        }
+      ]
+    },
+    {
+      "market_regime": true,
+      "model": "overnight_reversal",
+      "name": "Intraday reversal into the close",
+      "next_session_available": false,
+      "score": 0.9467391304347826,
+      "symbol": "QCOM",
+      "top_candidates": [
+        {
+          "score": 0.9467391304347826,
+          "symbol": "QCOM"
+        },
+        {
+          "score": 0.9086956521739131,
+          "symbol": "META"
+        },
+        {
+          "score": 0.8684782608695651,
+          "symbol": "CRM"
+        },
+        {
+          "score": 0.848913043478261,
+          "symbol": "PEP"
+        },
+        {
+          "score": 0.8206521739130435,
+          "symbol": "ORCL"
+        }
+      ]
+    }
+  ],
+  "news_status": "not available in historical replay",
+  "next_session_available": false
+}

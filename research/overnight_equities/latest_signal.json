@@ -1,0 +1,153 @@
+{
+  "champion_from_validation": null,
+  "date": "2026-09-18",
+  "models": [
+    {
+      "market_regime": true,
+      "model": "overnight_momentum",
+      "name": "Overnight momentum",
+      "score": 0.9130434782608696,
+      "symbol": "META",
+      "top_candidates": [
+        {
+          "score": 0.9130434782608696,
+          "symbol": "META"
+        },
+        {
+          "score": 0.8510869565217392,
+          "symbol": "CVX"
+        },
+        {
+          "score": 0.8336956521739131,
+          "symbol": "QCOM"
+        },
+        {
+          "score": 0.8228260869565216,
+          "symbol": "ORCL"
+        },
+        {
+          "score": 0.7913043478260869,
+          "symbol": "NVDA"
+        }
+      ]
+    },
+    {
+      "market_regime": true,
+      "model": "overnight_reversal",
+      "name": "Intraday reversal into the close",
+      "score": 0.9467391304347826,
+      "symbol": "QCOM",
+      "top_candidates": [
+        {
+          "score": 0.9467391304347826,
+          "symbol": "QCOM"
+        },
+        {
+          "score": 0.9086956521739131,
+          "symbol": "META"
+        },
+        {
+          "score": 0.8684782608695651,
+          "symbol": "CRM"
+        },
+        {
+          "score": 0.848913043478261,
+          "symbol": "PEP"
+        },
+        {
+          "score": 0.8206521739130435,
+          "symbol": "ORCL"
+        }
+      ]
+    },
+    {
+      "market_regime": true,
+      "model": "close_strength",
+      "name": "Close strength",
+      "score": 0.9771739130434782,
+      "symbol": "ISRG",
+      "top_candidates": [
+        {
+          "score": 0.9771739130434782,
+          "symbol": "ISRG"
+        },
+        {
+          "score": 0.9554347826086956,
+          "symbol": "JPM"
+        },
+        {
+          "score": 0.9554347826086956,
+          "symbol": "TXN"
+        },
+        {
+          "score": 0.9380434782608695,
+          "symbol": "XOM"
+        },
+        {
+          "score": 0.9369565217391305,
+          "symbol": "AMD"
+        }
+      ]
+    },
+    {
+      "market_regime": true,
+      "model": "relative_strength",
+      "name": "Market-relative strength",
+      "score": 0.9891304347826088,
+      "symbol": "META",
+      "top_candidates": [
+        {
+          "score": 0.9891304347826088,
+          "symbol": "META"
+        },
+        {
+          "score": 0.9358695652173914,
+          "symbol": "CRM"
+        },
+        {
+          "score": 0.8999999999999999,
+          "symbol": "AAPL"
+        },
+        {
+          "score": 0.8771739130434782,
+          "symbol": "AMD"
+        },
+        {
+          "score": 0.8108695652173914,
+          "symbol": "NVDA"
+        }
+      ]
+    },
+    {
+      "market_regime": true,
+      "model": "ensemble",
+      "name": "Risk-adjusted ensemble",
+      "score": 0.898913043478261,
+      "symbol": "JPM",
+      "top_candidates": [
+        {
+          "score": 0.898913043478261,
+          "symbol": "JPM"
+        },
+        {
+          "score": 0.8467391304347827,
+          "symbol": "AMD"
+        },
+        {
+          "score": 0.8380434782608696,
+          "symbol": "NVDA"
+        },
+        {
+          "score": 0.8336956521739131,
+          "symbol": "CVX"
+        },
+        {
+          "score": 0.8271739130434783,
+          "symbol": "CAT"
+        }
+      ]
+    }
+  ],
+  "next_session_available": false,
+  "selection_policy": "no validation champion is selected; all model lines remain visible"
+}

@@ -1,0 +1,164 @@
+{
+  "assumptions": {
+    "adjustment": "Yahoo split/dividend adjusted OHLC",
+    "allocation": 1.0,
+    "borrow_spread": 0.005,
+    "cash_rate": 0.04,
+    "entry": "regular-session close",
+    "exit": "next regular-session open",
+    "fee_each_side": 0.0,
+    "min_dollar_volume": 50000000.0,
+    "min_price": 10.0,
+    "news_gate": "not used in historical backtest; Alpaca/Benzinga adapter is ready for paper-forward use",
+    "slippage_each_side": 0.0005
+  },
+  "holdout_registry": {
+    "path": "/Users/sorenstallman/Documents/Codex/2026-09-16/https-www-youtube-com-watch-v-4/outputs/trading-lab/research/overnight_equities/holdout_registry.json",
+    "reopened": true,
+    "warnings": [
+      "HOLDOUT REGISTRY WARNING: holdout 2022-01-01..2025-01-01 has already been scored for this universe.",
+      "HOLDOUT REGISTRY WARNING: recent 2025-01-01..2026-09-19 has already been scored for this universe."
+    ]
+  },
+  "models": [
+    {
+      "id": "overnight_momentum",
+      "name": "Overnight momentum",
+      "regime": true,
+      "thesis": "Favor stocks with persistent close-to-open strength and medium-term relative strength.",
+      "weights": {
+        "mom20": 0.3,
+        "overnight_mean60": 0.45,
+        "resid_mom20": 0.15,
+        "vol20": -0.1,
+        "volume_ratio20": 0.1
+      }
+    },
+    {
+      "id": "overnight_reversal",
+      "name": "Intraday reversal into the close",
+      "regime": false,
+      "thesis": "Buy liquid stocks that were weak during the day but retain a positive overnight history.",
+      "weights": {
+        "close_location": -0.1,
+        "day_return": -0.55,
+        "mom5": -0.1,
+        "overnight_mean20": 0.25,
+        "vol20": -0.1
+      }
+    },
+    {
+      "id": "close_strength",
+      "name": "Close strength",
+      "regime": true,
+      "thesis": "Follow a strong close, high close location, and unusual volume into the next open.",
+      "weights": {
+        "close_location": 0.3,
+        "day_return": 0.45,
+        "mom5": 0.15,
+        "vol20": -0.1,
+        "volume_ratio20": 0.2
+      }
+    },
+    {
+      "id": "relative_strength",
+      "name": "Market-relative strength",
+      "regime": true,
+      "thesis": "Buy stocks whose recent return is strong after removing the benchmark move.",
+      "weights": {
+        "mom60": 0.25,
+        "overnight_mean20": 0.2,
+        "resid_mom20": 0.55,
+        "vol20": -0.1
+      }
+    },
+    {
+      "id": "ensemble",
+      "name": "Risk-adjusted ensemble",
+      "regime": true,
+      "thesis": "Blend momentum, reversal, close strength, and relative strength with a volatility penalty.",
+      "weights": {
+        "close_location": 0.1,
+        "day_return": 0.15,
+        "mom20": 0.2,
+        "overnight_mean60": 0.25,
+        "resid_mom20": 0.25,
+        "vol20": -0.2,
+        "volume_ratio20": 0.1
+      }
+    }
+  ],
+  "periods": {
+    "development": {
+      "end_exclusive": "2020-01-01",
+      "start": "2015-01-01"
+    },
+    "holdout": {
+      "end_exclusive": "2025-01-01",
+      "start": "2022-01-01"
+    },
+    "recent": {
+      "end_exclusive": "2026-09-19",
+      "start": "2025-01-01"
+    },
+    "validation": {
+      "end_exclusive": "2022-01-01",
+      "start": "2020-01-01"
+    }
+  },
+  "preregistration": {
+    "run_id": "phase1_overnight_20260919",
+    "spec_hash": "8f27293f9260b25eebd769b6588207eaffcd0521db050dca5b5fd033ce776cf6"
+  },
+  "selection_policy": "No champion is selected by validation rank. All candidates and the matched benchmarks are reported.",
+  "universe": [
+    "AAPL",
+    "ABBV",
+    "AMAT",
+    "AMD",
+    "AMZN",
+    "AVGO",
+    "BAC",
+    "BKNG",
+    "CAT",
+    "COST",
+    "CRM",
+    "CSCO",
+    "CVX",
+    "DIS",
+    "GE",
+    "GOOGL",
+    "GS",
+    "HD",
+    "IBM",
+    "INTU",
+    "ISRG",
+    "IWM",
+    "JNJ",
+    "JPM",
+    "KO",
+    "LIN",
+    "LLY",
+    "MA",
+    "MCD",
+    "META",
+    "MRK",
+    "MSFT",
+    "NFLX",
+    "NOW",
+    "NVDA",
+    "ORCL",
+    "PEP",
+    "PG",
+    "PLTR",
+    "QCOM",
+    "TMO",
+    "TSLA",
+    "TXN",
+    "UBER",
+    "V",
+    "WMT",
+    "XOM"
+  ],
+  "validation_champion": null
+}

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trading Lab — Paper Strategy Research</title>
+  <style>
+    :root {
+      --ink: #17211d; --muted: #66716c; --paper: #f3f0e8; --card: #fffdf8;
+      --green: #0d6b4d; --green-soft: #dcece4; --amber: #d98628; --red: #a8433c;
+      --line: #d8d3c7; --navy: #233a4a; --shadow: 0 16px 45px rgba(33,39,35,.09);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.35; background-image: radial-gradient(#b5afa1 .6px, transparent .6px); background-size:7px 7px; }
+    .shell { max-width: 1480px; margin:auto; padding: 28px; position:relative; }
+    header { display:flex; align-items:flex-start; justify-content:space-between; gap:30px; margin-bottom:24px; }
+    .eyebrow { color:var(--green); text-transform:uppercase; letter-spacing:.17em; font-size:11px; font-weight:800; }
+    h1 { margin:5px 0 7px; font-family: Georgia, serif; font-size:clamp(36px,5vw,68px); line-height:.96; letter-spacing:-.045em; font-weight:500; }
+    .dek { margin:0; color:var(--muted); max-width:730px; font-size:15px; line-height:1.6; }
+    .safety { flex:0 0 260px; border:1px solid #b8d4c5; background:#e9f4ed; color:#315b47; padding:12px 14px; border-radius:8px; font-size:12px; line-height:1.45; }
+    .controls { display:grid; grid-template-columns: 1.15fr .75fr .75fr auto; gap:10px; padding:13px; background:rgba(255,253,248,.8); backdrop-filter:blur(12px); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); position:sticky; top:12px; z-index:4; }
+    label { display:block; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    input, select { width:100%; margin-top:5px; border:0; background:transparent; font:600 15px inherit; color:var(--ink); outline:none; }
+    button { border:0; border-radius:8px; cursor:pointer; font:800 12px inherit; letter-spacing:.03em; padding:0 20px; background:var(--ink); color:white; transition:.2s ease; }
+    button:hover { transform:translateY(-1px); background:var(--green); }
+    button:disabled { opacity:.55; cursor:wait; transform:none; }
+    #status { margin:14px 2px 18px; min-height:18px; color:var(--muted); font-size:12px; }
+    #status.error { color:var(--red); }
+    .grid { display:grid; grid-template-columns: 1.7fr 1fr; gap:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; }
+    .card-head { display:flex; justify-content:space-between; align-items:flex-end; gap:15px; padding:18px 20px 12px; border-bottom:1px solid var(--line); }
+    .card-head h2 { font-family:Georgia,serif; font-weight:500; font-size:21px; margin:0; }
+    .card-head p { color:var(--muted); font-size:11px; margin:4px 0 0; }
+    .rank { padding:0; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th { text-align:right; color:var(--muted); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:11px 10px; position:sticky; top:0; background:#f7f4ed; }
+    th:nth-child(-n+2), td:nth-child(-n+2) { text-align:left; }
+    td { text-align:right; padding:11px 10px; border-top:1px solid #ece8de; font-variant-numeric:tabular-nums; }
+    tbody tr { cursor:pointer; transition:.14s; }
+    tbody tr:hover, tbody tr.selected { background:#edf5f0; }
+    tbody tr.selected td:first-child { box-shadow:inset 3px 0 var(--green); }
+    .table-wrap { max-height:520px; overflow:auto; }
+    .family { display:inline-block; font-size:9px; text-transform:uppercase; color:var(--green); background:var(--green-soft); border-radius:20px; padding:3px 7px; font-weight:800; }
+    .negative { color:var(--red); } .positive { color:var(--green); }
+    .detail { padding:20px; }
+    .winner { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
+    .winner h3 { font-family:Georgia,serif; font-weight:500; font-size:27px; margin:2px 0 4px; }
+    .winner .rank-no { font-family:Georgia,serif; font-size:42px; color:#b2aa9b; line-height:1; }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:18px 0; }
+    .metric { padding:11px; background:#f3f0e8; border-radius:7px; }
+    .metric span { color:var(--muted); text-transform:uppercase; font-size:8px; letter-spacing:.08em; display:block; }
+    .metric strong { font-family:Georgia,serif; font-size:20px; font-weight:500; display:block; margin-top:2px; }
+    .chart-shell { height:245px; padding:5px 0 0; position:relative; }
+    canvas { width:100%; height:100%; display:block; }
+    .split { position:absolute; top:10px; bottom:20px; border-left:1px dashed var(--amber); pointer-events:none; }
+    .split em { position:absolute; top:0; transform:translateX(5px); font-size:9px; font-style:normal; color:var(--amber); white-space:nowrap; }
+    .note { font-size:11px; color:var(--muted); line-height:1.55; padding:11px 13px; border-left:3px solid var(--amber); background:#fff5e6; }
+    .lower { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:16px; }
+    .phase { padding:18px 19px; }
+    .phase .num { font-family:Georgia,serif; color:var(--amber); font-size:28px; }
+    .phase h3 { margin:2px 0 8px; font-family:Georgia,serif; font-size:19px; font-weight:500; }
+    .phase p { margin:0; color:var(--muted); font-size:11px; line-height:1.55; }
+    .paper { margin-top:16px; }
+    .paper-inner { display:grid; grid-template-columns: 1fr 1.35fr; gap:16px; padding:18px 20px 22px; }
+    .paper h3 { font-family:Georgia,serif; font-weight:500; margin:0 0 8px; }
+    .paper button { min-height:40px; margin:12px 0 0; }
+    .ledger { border:1px solid var(--line); border-radius:8px; overflow:hidden; min-height:115px; }
+    .ledger-item { display:grid; grid-template-columns:68px 1fr auto; gap:10px; padding:9px 11px; font-size:10px; border-bottom:1px solid #ece8de; }
+    .ledger-item:last-child { border-bottom:0; }
+    .empty { color:var(--muted); display:grid; place-items:center; height:112px; font-size:11px; }
+    footer { display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:10px; padding:22px 2px 8px; }
+    .pulse { display:inline-block; width:7px; height:7px; background:var(--green); border-radius:50%; margin-right:6px; box-shadow:0 0 0 5px rgba(13,107,77,.1); }
+    @media (max-width:900px) { header { display:block; } .safety { margin-top:18px; width:auto; } .grid,.lower,.paper-inner { grid-template-columns:1fr; } .controls { grid-template-columns:1fr 1fr; position:relative; top:auto; } button { min-height:42px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">Strategy research · paper execution</div>
+        <h1>Trading Lab</h1>
+        <p class="dek">Exploratory strategy screener. Ranking on the displayed evaluation period makes it selection data; it is not an untouched validation set. <a href="/">Open the weekly trade replay</a>.</p>
+      </div>
+      <div class="safety"><span class="pulse"></span><strong>Paper-only by construction.</strong><br>No key entry, no order endpoint, no withdrawals. Market data is public; execution stays on this computer.</div>
+    </header>
+
+    <section class="controls">
+      <label>Market<input id="symbol" value="BTCUSDT" maxlength="20" autocomplete="off"></label>
+      <label>Timeframe<select id="interval"><option>4h</option><option selected>1d</option><option>3d</option><option>1w</option><option>1h</option></select></label>
+      <label>History<select id="limit"><option value="500">500 bars</option><option value="750">750 bars</option><option value="1000" selected>1,000 bars</option></select></label>
+      <button id="run">Run 67 tests</button>
+    </section>
+    <div id="status">Ready. The first run uses live public candles and may take a few seconds.</div>
+
+    <section class="grid">
+      <div class="card rank">
+        <div class="card-head"><div><h2>Exploratory evaluation leaderboard</h2><p>Ranks use the final 30%; results are exploratory and require a separate holdout.</p></div><div class="family" id="count">— variants</div></div>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Strategy</th><th>OOS return</th><th>Max DD</th><th>Profit factor</th><th>Trades</th><th>vs hold</th></tr></thead><tbody id="rows"></tbody></table></div>
+      </div>
+
+      <aside class="card">
+        <div class="detail" id="detail">
+          <div class="winner"><div><span class="family">Select a result</span><h3>No strategy loaded</h3><div class="dek">Run the lab to compare the candidates.</div></div><div class="rank-no">—</div></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="lower">
+      <article class="card phase"><div class="num">01</div><h3>Source & specify</h3><p>Every indicator becomes explicit entry, exit, and position rules. The featured Andean + Laguerre setup is one candidate—not a privileged answer.</p></article>
+      <article class="card phase"><div class="num">02</div><h3>Backtest honestly</h3><p>Signals execute one bar later, 0.15% costs apply to each position change, and the last 30% stays out of sample for ranking.</p></article>
+      <article class="card phase"><div class="num">03</div><h3>Forward-test slowly</h3><p>Paper changes go to an append-only ledger. Closed trades add observations, but one loss never silently rewrites the strategy.</p></article>
+    </section>
+
+    <section class="card paper">
+      <div class="card-head"><div><h2>Paper forward test</h2><p>Evaluate the selected strategy on the latest completed candle and record only a simulated change.</p></div></div>
+      <div class="paper-inner">
+        <div><h3 id="paper-name">Choose a strategy above</h3><p class="dek" id="paper-state">No paper position yet.</p><button id="paper" disabled>Evaluate latest candle</button></div>
+        <div class="ledger" id="ledger"><div class="empty">The local ledger is empty.</div></div>
+      </div>
+    </section>
+
+    <footer><span>Educational research tool — not financial advice or a profit claim.</span><span id="stamp">No data loaded</span></footer>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let payload = null, selected = null;
+    const fmtPct = n => `${n >= 0 ? '+' : ''}${(n*100).toFixed(2)}%`;
+    const fmt = n => Number(n).toFixed(2);
+    const esc = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function setStatus(text, error=false) { $('status').textContent=text; $('status').className=error?'error':''; }
+    function metric(label, value, cls='') { return `<div class="metric"><span>${label}</span><strong class="${cls}">${value}</strong></div>`; }
+
+    function renderRows() {
+      $('rows').innerHTML = payload.results.map(row => `<tr data-id="${row.id}" class="${selected?.id===row.id?'selected':''}">
+        <td>${row.rank}</td><td><strong>${esc(row.name)}</strong><br><span class="family">${esc(row.family.replace('_',' '))}</span></td>
+        <td class="${row.oos.return>=0?'positive':'negative'}">${fmtPct(row.oos.return)}</td><td>${fmtPct(-row.oos.max_drawdown)}</td>
+        <td>${fmt(row.oos.profit_factor)}</td><td>${row.oos.trades}</td><td class="${row.oos.return-row.oos.buy_hold>=0?'positive':'negative'}">${fmtPct(row.oos.return-row.oos.buy_hold)}</td></tr>`).join('');
+      document.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => selectResult(tr.dataset.id));
+    }
+
+    function selectResult(id) {
+      selected = payload.results.find(row => row.id===id);
+      renderRows(); renderDetail();
+      $('paper').disabled=false; $('paper-name').textContent=selected.name;
+    }
+
+    function renderDetail() {
+      const r=selected, o=r.oos, f=r.full;
+      $('detail').innerHTML = `<div class="winner"><div><span class="family">${esc(r.family.replace('_',' '))}</span><h3>${esc(r.name)}</h3><div class="dek">${esc(JSON.stringify(r.params).replace(/[{}\"]/g,'').replace(/,/g,' ·'))}</div></div><div class="rank-no">#${r.rank}</div></div>
+        <div class="metrics">${metric('OOS return',fmtPct(o.return),o.return>=0?'positive':'negative')}${metric('Max drawdown',fmtPct(-o.max_drawdown),'negative')}${metric('Profit factor',fmt(o.profit_factor))}${metric('Win rate',fmtPct(o.win_rate))}${metric('Closed trades',o.trades)}${metric('Buy & hold',fmtPct(o.buy_hold))}</div>
+        <div class="chart-shell"><canvas id="chart"></canvas><div class="split" id="split"><em>unseen 30% →</em></div></div>
+        <p class="note">${o.trades<8?'Fragile sample: too few out-of-sample trades to trust. ':''}${o.return<o.buy_hold?'This trails buy-and-hold in the unseen segment. ':''}A high rank is a research queue, never an instruction to trade.</p>`;
+      drawChart(f.equity, f.dates, payload.split_index);
+    }
+
+    function drawChart(values, dates, splitIndex) {
+      const canvas=$('chart'), dpr=window.devicePixelRatio||1, box=canvas.getBoundingClientRect();
+      canvas.width=box.width*dpr; canvas.height=box.height*dpr; const c=canvas.getContext('2d'); c.scale(dpr,dpr);
+      const w=box.width,h=box.height,p=12,min=Math.min(...values),max=Math.max(...values),range=max-min||1;
+      c.strokeStyle='#ded9ce'; c.lineWidth=1; for(let i=1;i<4;i++){let y=p+(h-2*p)*i/4;c.beginPath();c.moveTo(p,y);c.lineTo(w-p,y);c.stroke();}
+      c.beginPath(); values.forEach((v,i)=>{let x=p+(w-2*p)*i/(values.length-1),y=h-p-(h-2*p)*(v-min)/range;i?c.lineTo(x,y):c.moveTo(x,y)});
+      c.strokeStyle='#0d6b4d'; c.lineWidth=2; c.stroke();
+      const gradient=c.createLinearGradient(0,0,0,h); gradient.addColorStop(0,'rgba(13,107,77,.18)'); gradient.addColorStop(1,'rgba(13,107,77,0)');
+      c.lineTo(w-p,h-p);c.lineTo(p,h-p);c.closePath();c.fillStyle=gradient;c.fill();
+      $('split').style.left=`${p+(w-2*p)*(splitIndex/values.length)}px`;
+    }
+
+    async function run() {
+      const symbol=$('symbol').value.trim().toUpperCase(), interval=$('interval').value, limit=$('limit').value;
+      $('run').disabled=true; $('run').textContent='Testing…'; setStatus('Fetching public candles and running the strategy matrix…');
+      try {
+        const response=await fetch(`/api/run?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`);
+        const body=await response.json(); if(!response.ok) throw new Error(body.error||'Analysis failed.');
+        payload=body; selected=body.results[0]; $('count').textContent=`${body.results.length} variants`; $('stamp').textContent=`${body.symbol} · ${body.interval} · ${new Date(body.generated_at).toLocaleString()}`;
+        renderRows(); renderDetail(); $('paper').disabled=false; $('paper-name').textContent=selected.name;
+        setStatus(`Finished ${body.results.length} tests on ${body.bars.length.toLocaleString()} candles. Ranking uses only the unseen final 30%.`);
+      } catch(error) { setStatus(error.message,true); }
+      finally { $('run').disabled=false; $('run').textContent='Run 67 tests'; }
+    }
+
+    async function loadLedger() {
+      try { const data=await fetch('/api/ledger').then(r=>r.json()); renderLedger(data); } catch(_) {}
+    }
+    function renderLedger(data) {
+      const s=data.state||{}; $('paper-state').textContent=s.position ? `Current simulation: ${s.position>0?'LONG':'SHORT'} from ${Number(s.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}.` : 'Current simulation: flat.';
+      $('ledger').innerHTML=data.events?.length ? data.events.map(e=>`<div class="ledger-item"><strong class="${e.kind==='OPEN'?'positive':''}">${esc(e.kind)}</strong><span>${esc(e.strategy)} · ${esc(e.side)}<br>${new Date(e.time).toLocaleString()}</span><strong>${Number(e.price).toLocaleString(undefined,{maximumFractionDigits:2})}${e.pnl_pct!=null?`<br><span class="${e.pnl_pct>=0?'positive':'negative'}">${fmtPct(e.pnl_pct)}</span>`:''}</strong></div>`).join('') : '<div class="empty">The local ledger is empty.</div>';
+    }
+    async function paperStep() {
+      if(!selected) return; $('paper').disabled=true; $('paper').textContent='Evaluating…';
+      try { const response=await fetch('/api/paper/step',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:$('symbol').value.trim().toUpperCase(),interval:$('interval').value,strategy_id:selected.id})}); const body=await response.json(); if(!response.ok) throw new Error(body.error); setStatus(body.changed?'Paper ledger updated. No real order was sent.':'No signal change; the paper ledger was left untouched.'); await loadLedger(); }
+      catch(error){setStatus(error.message,true)} finally{$('paper').disabled=false;$('paper').textContent='Evaluate latest candle'}
+    }
+    $('run').onclick=run; $('paper').onclick=paperStep; window.addEventListener('resize',()=>selected&&renderDetail()); loadLedger(); run();
+  </script>
+</body>
+</html>

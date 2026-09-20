@@ -1,0 +1,426 @@
+{
+  "created_utc": "2026-09-19T15:30:38.703822+00:00",
+  "latest_signal": {
+    "date": "2026-09-18",
+    "models": [
+      {
+        "market_regime": true,
+        "model": "overnight_momentum",
+        "name": "Overnight momentum",
+        "next_session_available": false,
+        "score": 0.9130434782608696,
+        "symbol": "META",
+        "top_candidates": [
+          {
+            "score": 0.9130434782608696,
+            "symbol": "META"
+          },
+          {
+            "score": 0.8510869565217392,
+            "symbol": "CVX"
+          },
+          {
+            "score": 0.8336956521739131,
+            "symbol": "QCOM"
+          },
+          {
+            "score": 0.8228260869565216,
+            "symbol": "ORCL"
+          },
+          {
+            "score": 0.7913043478260869,
+            "symbol": "NVDA"
+          }
+        ]
+      },
+      {
+        "market_regime": true,
+        "model": "overnight_reversal",
+        "name": "Intraday reversal into the close",
+        "next_session_available": false,
+        "score": 0.9467391304347826,
+        "symbol": "QCOM",
+        "top_candidates": [
+          {
+            "score": 0.9467391304347826,
+            "symbol": "QCOM"
+          },
+          {
+            "score": 0.9086956521739131,
+            "symbol": "META"
+          },
+          {
+            "score": 0.8684782608695651,
+            "symbol": "CRM"
+          },
+          {
+            "score": 0.848913043478261,
+            "symbol": "PEP"
+          },
+          {
+            "score": 0.8206521739130435,
+            "symbol": "ORCL"
+          }
+        ]
+      }
+    ],
+    "news_status": "not available in historical replay",
+    "next_session_available": false
+  },
+  "news_used": false,
+  "no_live_orders": true,
+  "notes": [
+    "The two selected models are the top 30% of the five broad-study models by validation quality.",
+    "The recent windows are a historical shadow replay; they are not a forward guarantee and use daily bars.",
+    "The focused portfolio uses 50% total notional (25% per model) and leaves the rest in cash.",
+    "Alpaca quote/spread and Benzinga-backed news checks are required for a true paper-forward run.",
+    "No order endpoint, credential, or live/paper order was used by this run."
+  ],
+  "quote_aware_fills": false,
+  "run": {
+    "allocation_per_model": 0.25,
+    "capital": 10000.0,
+    "data_end": "2026-09-18",
+    "entry": "regular-session close",
+    "exit": "next regular-session open",
+    "fee_each_side": 0.0,
+    "sessions_per_window": 90,
+    "slippage_each_side": 0.0005,
+    "total_allocation": 0.5,
+    "windows": {
+      "prior_90": {
+        "exit": "2026-05-11",
+        "last_entry": "2026-05-08",
+        "start": "2025-12-30"
+      },
+      "recent_90": {
+        "exit": "2026-09-18",
+        "last_entry": "2026-09-17",
+        "start": "2026-05-11"
+      }
+    }
+  },
+  "selection": {
+    "all_validation_candidates": [
+      {
+        "model": "overnight_momentum",
+        "name": "Overnight momentum",
+        "rank": 1,
+        "selected": true,
+        "validation_drawdown_pct": 36.56004950512277,
+        "validation_quality": 32.62434612711902,
+        "validation_return_pct": 50.782680891418906
+      },
+      {
+        "model": "overnight_reversal",
+        "name": "Intraday reversal into the close",
+        "rank": 2,
+        "selected": true,
+        "validation_drawdown_pct": 35.23226115244004,
+        "validation_quality": 30.37201329094699,
+        "validation_return_pct": 47.863652698581504
+      },
+      {
+        "model": "relative_strength",
+        "name": "Market-relative strength",
+        "rank": 3,
+        "selected": false,
+        "validation_drawdown_pct": 34.38861708602112,
+        "validation_quality": 25.393830529317682,
+        "validation_return_pct": 42.46644908406674
+      },
+      {
+        "model": "ensemble",
+        "name": "Risk-adjusted ensemble",
+        "rank": 4,
+        "selected": false,
+        "validation_drawdown_pct": 28.5187307370945,
+        "validation_quality": -10.284344086118987,
+        "validation_return_pct": 3.853331294166762
+      },
+      {
+        "model": "close_strength",
+        "name": "Close strength",
+        "rank": 5,
+        "selected": false,
+        "validation_drawdown_pct": 35.45439547988395,
+        "validation_quality": -40.739795203475246,
+        "validation_return_pct": -23.134287451794776
+      }
+    ],
+    "candidate_count": 5,
+    "fraction": 0.3,
+    "method": "top validation quality, frozen before holdout and recent windows",
+    "selected_count": 2,
+    "selected_models": [
+      {
+        "model": "overnight_momentum",
+        "name": "Overnight momentum",
+        "rank": 1,
+        "selected": true,
+        "validation_drawdown_pct": 36.56004950512277,
+        "validation_quality": 32.62434612711902,
+        "validation_return_pct": 50.782680891418906
+      },
+      {
+        "model": "overnight_reversal",
+        "name": "Intraday reversal into the close",
+        "rank": 2,
+        "selected": true,
+        "validation_drawdown_pct": 35.23226115244004,
+        "validation_quality": 30.37201329094699,
+        "validation_return_pct": 47.863652698581504
+      }
+    ]
+  },
+  "stress": [
+    {
+      "allocation": 0.25,
+      "bootstrap_lower_95_pct": -1.8534582398589738,
+      "daily_sharpe": 2.2261852501719157,
+      "ending_equity": 10420.785592152171,
+      "fee": 0.0,
+      "max_drawdown_pct": 2.1034501002625494,
+      "mean_daily_return_pct": 0.046351890066754865,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 420.7855921521714,
+      "profit_factor": 1.572360250439205,
+      "return_pct": 4.207855921521708,
+      "scenario": "25pct_total",
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 48.888888888888886,
+      "window": "prior_90",
+      "wins": 44
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -3.727125895525374,
+      "daily_sharpe": 2.2261852501719157,
+      "ending_equity": 10848.51805641826,
+      "fee": 0.0,
+      "max_drawdown_pct": 4.181839544152943,
+      "mean_daily_return_pct": 0.09270378013350973,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 848.5180564182592,
+      "profit_factor": 1.572360250439205,
+      "return_pct": 8.485180564182592,
+      "scenario": "50pct_total",
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 48.888888888888886,
+      "window": "prior_90",
+      "wins": 44
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -7.960541675990829,
+      "daily_sharpe": 1.0248857936550635,
+      "ending_equity": 10370.860257785183,
+      "fee": 0.0,
+      "max_drawdown_pct": 5.794550226162986,
+      "mean_daily_return_pct": 0.04263608516701144,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 370.8602577851834,
+      "profit_factor": 1.2262071579903715,
+      "return_pct": 3.7086025778518383,
+      "scenario": "double_cost_50pct",
+      "sessions": 90,
+      "slippage": 0.001,
+      "trades": 180,
+      "win_rate_pct": 43.333333333333336,
+      "window": "prior_90",
+      "wins": 39
+    },
+    {
+      "allocation": 0.25,
+      "bootstrap_lower_95_pct": -6.473255643355335,
+      "daily_sharpe": 0.2790196801482529,
+      "ending_equity": 10060.830579631236,
+      "fee": 0.0,
+      "max_drawdown_pct": 4.186527166132659,
+      "mean_daily_return_pct": 0.007698812047036799,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 60.830579631236105,
+      "profit_factor": 1.0508859781598525,
+      "return_pct": 0.6083057963123695,
+      "scenario": "25pct_total",
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 54.44444444444444,
+      "window": "recent_90",
+      "wins": 49
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -12.699345120347449,
+      "daily_sharpe": 0.2790196801482529,
+      "ending_equity": 10104.518395907722,
+      "fee": 0.0,
+      "max_drawdown_pct": 8.283465380686739,
+      "mean_daily_return_pct": 0.015397624094073598,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 104.51839590772215,
+      "profit_factor": 1.0508859781598525,
+      "return_pct": 1.0451839590772227,
+      "scenario": "50pct_total",
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 54.44444444444444,
+      "window": "recent_90",
+      "wins": 49
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -16.534054855576883,
+      "daily_sharpe": -0.6274818610054729,
+      "ending_equity": 9659.969078299637,
+      "fee": 0.0,
+      "max_drawdown_pct": 9.282562852153509,
+      "mean_daily_return_pct": -0.034592803311531826,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": -340.03092170036325,
+      "profit_factor": 0.8941659049461582,
+      "return_pct": -3.4003092170036275,
+      "scenario": "double_cost_50pct",
+      "sessions": 90,
+      "slippage": 0.001,
+      "trades": 180,
+      "win_rate_pct": 50.0,
+      "window": "recent_90",
+      "wins": 45
+    }
+  ],
+  "summary": [
+    {
+      "allocation": 1.0,
+      "bootstrap_lower_95_pct": -9.017643146822385,
+      "daily_sharpe": 1.794586648102175,
+      "ending_equity": 11420.19568688185,
+      "fee": 0.0,
+      "max_drawdown_pct": 9.045640556068014,
+      "mean_daily_return_pct": 0.15738108341165302,
+      "model": "overnight_momentum",
+      "name": "Overnight momentum",
+      "net_pnl": 1420.1956868818506,
+      "profit_factor": 1.4155007345264787,
+      "return_pct": 14.20195686881851,
+      "selection_rank": 1,
+      "slippage": 0.0005,
+      "trades": 90,
+      "win_rate_pct": 55.55555555555556,
+      "window": "prior_90",
+      "wins": 50
+    },
+    {
+      "allocation": 1.0,
+      "bootstrap_lower_95_pct": -14.348311937949676,
+      "daily_sharpe": 1.8168891777943317,
+      "ending_equity": 11934.164905347045,
+      "fee": 0.0,
+      "max_drawdown_pct": 8.54441363752011,
+      "mean_daily_return_pct": 0.2134340371223859,
+      "model": "overnight_reversal",
+      "name": "Intraday reversal into the close",
+      "net_pnl": 1934.1649053470446,
+      "profit_factor": 1.47622168404564,
+      "return_pct": 19.341649053470444,
+      "selection_rank": 2,
+      "slippage": 0.0005,
+      "trades": 90,
+      "win_rate_pct": 44.44444444444444,
+      "window": "prior_90",
+      "wins": 40
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -3.727125895525374,
+      "daily_sharpe": 2.2261852501719157,
+      "ending_equity": 10848.51805641826,
+      "fee": 0.0,
+      "max_drawdown_pct": 4.181839544152943,
+      "mean_daily_return_pct": 0.09270378013350973,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 848.5180564182592,
+      "profit_factor": 1.572360250439205,
+      "return_pct": 8.485180564182592,
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 48.888888888888886,
+      "window": "prior_90",
+      "wins": 44
+    },
+    {
+      "allocation": 1.0,
+      "bootstrap_lower_95_pct": -37.933934166499384,
+      "daily_sharpe": 0.02606298072313233,
+      "ending_equity": 9681.375139433114,
+      "fee": 0.0,
+      "max_drawdown_pct": 18.142486735936092,
+      "mean_daily_return_pct": 0.004690447654224957,
+      "model": "overnight_momentum",
+      "name": "Overnight momentum",
+      "net_pnl": -318.6248605668861,
+      "profit_factor": 1.0048895998644256,
+      "return_pct": -3.186248605668862,
+      "selection_rank": 1,
+      "slippage": 0.0005,
+      "trades": 90,
+      "win_rate_pct": 50.0,
+      "window": "recent_90",
+      "wins": 45
+    },
+    {
+      "allocation": 1.0,
+      "bootstrap_lower_95_pct": -27.66318889763929,
+      "daily_sharpe": 0.4775920915656895,
+      "ending_equity": 10355.694936291682,
+      "fee": 0.0,
+      "max_drawdown_pct": 19.4723110505442,
+      "mean_daily_return_pct": 0.05690004872206944,
+      "model": "overnight_reversal",
+      "name": "Intraday reversal into the close",
+      "net_pnl": 355.6949362916821,
+      "profit_factor": 1.0969211213269785,
+      "return_pct": 3.556949362916817,
+      "selection_rank": 2,
+      "slippage": 0.0005,
+      "trades": 90,
+      "win_rate_pct": 51.11111111111111,
+      "window": "recent_90",
+      "wins": 46
+    },
+    {
+      "allocation": 0.5,
+      "bootstrap_lower_95_pct": -12.699345120347449,
+      "daily_sharpe": 0.2790196801482529,
+      "ending_equity": 10104.518395907722,
+      "fee": 0.0,
+      "max_drawdown_pct": 8.283465380686739,
+      "mean_daily_return_pct": 0.015397624094073598,
+      "model": "focused_portfolio",
+      "name": "Focused top-30% portfolio",
+      "net_pnl": 104.51839590772215,
+      "profit_factor": 1.0508859781598525,
+      "return_pct": 1.0451839590772227,
+      "sessions": 90,
+      "slippage": 0.0005,
+      "trades": 180,
+      "win_rate_pct": 54.44444444444444,
+      "window": "recent_90",
+      "wins": 49
+    }
+  ]
+}

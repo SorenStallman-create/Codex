@@ -1,0 +1,95 @@
+{
+  "created_utc": "2026-09-19T18:23:34.363187+00:00",
+  "gates": [
+    "median round-trip slippage below 8 bps continues to 250 sessions",
+    "median round-trip slippage from 8 to 12 bps requires gross edge above measured cost with confidence interval",
+    "median round-trip slippage above 12 bps archives the line",
+    "halt on data, quote, order, or reconciliation error"
+  ],
+  "hypothesis": "The frozen close-to-next-open signal may retain a measurable gross edge after quote-aware paper fills and execution gates.",
+  "kill_condition": "Archive the overnight line if measured median round-trip slippage exceeds 12 bps, or if the frozen signal cannot be reconciled without manual intervention.",
+  "parameters": {
+    "entry": "buy at quoted ask after the regular-session close decision",
+    "exit": "sell at quoted bid at the next regular-session open",
+    "feed": "Alpaca IEX",
+    "fill_cost_definition": "adverse-side quote fill versus official close/open",
+    "leverage": 1.0,
+    "max_model_allocation": 0.25,
+    "max_quote_age_ms": 5000,
+    "max_spread_bps": 12.0,
+    "max_total_allocation": 0.5,
+    "models": [
+      "overnight_momentum",
+      "overnight_reversal"
+    ],
+    "severe_news_action": "block"
+  },
+  "periods": {
+    "paper_measurement": {
+      "follow_on_sessions": 250,
+      "sessions": 60
+    }
+  },
+  "predicted_effect": {
+    "metric": "round_trip_slippage_bps",
+    "range": [
+      4.0,
+      12.0
+    ],
+    "value": 10.0
+  },
+  "run_id": "phase2_paper_20260919",
+  "source": "Trading Lab Phase 2 standing brief; execution measurement rather than a new signal hypothesis.",
+  "spec_hash": "2cb4e52faa9b406caf093340bcea2d870c7906b0e8ea0f26a477a2b30f8121de",
+  "strategy": "overnight_equities_paper_forward",
+  "universe": [
+    "SPY",
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMZN",
+    "META",
+    "GOOGL",
+    "AVGO",
+    "TSLA",
+    "JPM",
+    "WMT",
+    "LLY",
+    "V",
+    "ORCL",
+    "MA",
+    "XOM",
+    "COST",
+    "NFLX",
+    "JNJ",
+    "HD",
+    "PG",
+    "BAC",
+    "ABBV",
+    "KO",
+    "CRM",
+    "CVX",
+    "MRK",
+    "AMD",
+    "PEP",
+    "TMO",
+    "MCD",
+    "LIN",
+    "DIS",
+    "CSCO",
+    "IBM",
+    "GE",
+    "CAT",
+    "AMAT",
+    "QCOM",
+    "TXN",
+    "INTU",
+    "NOW",
+    "UBER",
+    "PLTR",
+    "GS",
+    "ISRG",
+    "BKNG",
+    "IWM"
+  ]
+}
