@@ -18,10 +18,9 @@ No live-money trading is enabled by this project.
 
 The Trading Lab directory was not previously a Git repository, and the nearby
 `Documents/GitHub/Claude-Code` checkout is unrelated and has no configured
-remote. This handoff therefore bootstraps a local repository in this directory
-and creates the requested dated handoff branch. The initial commit contains the
-reviewed project files listed below. A remote still needs to be configured before
-the branch can be pushed to another host.
+remote. This handoff therefore bootstrapped a local repository in this directory,
+created the requested dated handoff branch, and pushed it to the configured
+`origin` remote. The branch contains the reviewed project files listed below.
 
 ## Completed work
 
@@ -43,7 +42,8 @@ the branch can be pushed to another host.
   partial-fill, reconciliation, and kill-switch checks.
 - Added `alpaca_overnight.py` for historical bars/news and paper quote/order
   access using standard-library HTTP.
-- Added `alpaca_setup.py`, `.env.example`, and the Alpaca integration guide.
+- Added `alpaca_setup.py` and the Alpaca integration guide. Environment templates
+  remain outside Git.
 - Added the paper ledger contract and dashboard under
   `research/overnight_equities/paper/`.
 - Added the frozen Phase 2 preregistration at
