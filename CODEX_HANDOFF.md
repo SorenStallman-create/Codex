@@ -14,6 +14,43 @@ rules to decide whether the line continues to 250 sessions or is archived.
 
 No live-money trading is enabled by this project.
 
+## Highest-priority future implementation: research-driven self-improving agent
+
+The user wants the missing research-driven model implemented after the frozen
+deterministic paper measurement is underway. This is the "Luna"-style model
+described in the earlier brief: each session it gathers point-in-time market,
+news, catalyst, and risk data; chooses a liquid stock or chooses no trade; and
+records its thesis, evidence, confidence, invalidation conditions, and result.
+It must feed the same quote-aware paper execution gates before any order path is
+considered.
+
+The newly supplied video is Lewis Jackson's *How To Build A Self-Improving AI
+Trading Agent* (YouTube `6njREUQAFdg`). Its useful design ideas are: accurate
+data, reliable 24/7 operation, an explicit goal with success and failure
+conditions, and a feedback loop that tests one variable at a time using a
+baseline, hypothesis, and measured result. The video describes Hermes Agent,
+daily and 30-minute Bittensor experiments, and self-modification; its live
+claims are not independent evidence and must not be copied into production.
+
+Implementation priority, in order:
+
+1. Add a frozen research-agent interface and event log (model/version, prompt
+   hash, data timestamps, sources, decision, confidence, risks, and no-trade
+   reason).
+2. Run it in shadow mode beside the deterministic overnight cohort; no orders,
+   no self-editing, and no prompt/model changes during each pre-registered
+   60-session window.
+3. Allow only offline, one-variable proposals into a review queue. A proposal
+   must pass tests and an untouched validation window before it can become a
+   new frozen version.
+4. Compare the agent with the deterministic cohort and
+   `spy_buy_hold_matched`, using the same fill ledger, confidence intervals,
+   power line, cost stress, and 250-session gate.
+
+This is intentionally a later priority. The current repository does not yet
+contain a Luna/Hermes implementation, and no Luna sessions, trades, or results
+exist. The supplied video is a design reference, not proof of profitability.
+
 ## Repository and Git state
 
 The Trading Lab directory was not previously a Git repository, and the nearby
@@ -93,15 +130,17 @@ PASS
 ```
 
 `python3 alpaca_setup.py check` reached the network-check path but could not
-resolve the Alpaca host in the restricted environment. It did not write a
-credential into the repository. Run it again on a machine with network access
-after configuring a paper key pair.
+resolve the Alpaca host in the restricted environment. A later network-enabled
+check returned HTTP 401 because the local private file currently has a malformed
+key ID and an invalid secret field. No credential value was written to this
+repository. Regenerate a paper-only key pair in the Alpaca dashboard, store it
+only in `~/.config/trading_lab/alpaca.env` with mode `0600`, and rerun the check.
 
 ## Remaining work
 
 1. Configure the user's regenerated Alpaca **paper** key pair locally. The
    repository must never receive the values.
-2. Start the frozen nightly paper loop and record one entry and one exit per
+2. On the next regular market session, start the frozen nightly paper loop and record one entry and one exit per
    completed session in `research/overnight_equities/paper/fills.csv`.
 3. Do not tune the signal, add candidates, or replay the measured window while
    the first 60 sessions are being collected.
@@ -109,7 +148,9 @@ after configuring a paper key pair.
    median round-trip slippage under 8 bps continues to 250 sessions; 8–12 bps
    is marginal and requires a measured gross edge above measured cost; over 12
    bps archives the overnight line.
-5. Before any real capital is considered, require all gates in the plan:
+5. After the deterministic measurement is stable, implement the research-driven
+   agent under the priority above and preregister its shadow-mode window.
+6. Before any real capital is considered, require all gates in the plan:
    250+ quote-aware paper sessions, a positive bootstrap lower bound versus
    matched SPY, measured slippage within 2 bps of the model assumption, the
    pre-registered drawdown limit, survival at 2x modeled cost, and a written
