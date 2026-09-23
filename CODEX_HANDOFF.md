@@ -1,6 +1,6 @@
 # Codex handoff: Trading Lab
 
-Date: 2026-09-20
+Date: 2026-09-22
 Project: paper-only strategy research and Alpaca paper-forward measurement
 
 ## Original goal
@@ -69,9 +69,12 @@ Implementation priority, in order:
    `spy_buy_hold_matched`, using the same fill ledger, confidence intervals,
    power line, cost stress, and 250-session gate.
 
-This is intentionally a later priority. The current repository does not yet
-contain a Luna/Hermes implementation, and no Luna sessions, trades, or results
-exist. The supplied video is a design reference, not proof of profitability.
+This is intentionally a later priority. The repository now contains the
+provider-neutral decision contract and integrity-evident event log described
+in [`research/overnight_equities/AGENT_SHADOW.md`](research/overnight_equities/AGENT_SHADOW.md).
+It does not yet contain a Luna/Hermes model or data adapter, and no agent
+decisions, sessions, or outcomes have been recorded. The supplied video is a
+design reference, not proof of profitability.
 
 ## Repository and Git state
 
@@ -109,6 +112,20 @@ created the requested dated handoff branch, and pushed it to the configured
   `research/overnight_equities/prereg/phase2_paper_20260919.json`.
 - Kept the execution path paper-only. No live order endpoint or live credential
   is stored in this project.
+
+### Research-agent foundation
+
+- Added `research_agent.py` as a provider-neutral decision validator and
+  append-only, hash-chained event log. It requires timestamped data provenance,
+  evidence tied to named sources, confidence, risk flags, invalidation
+  conditions, and pinned model, prompt, and configuration hashes.
+- The log rejects duplicate run/session decisions, agent identity changes
+  within a run, non-increasing session dates, future data, and broken hashes.
+  Its default runtime location is under ignored `state/` and it has no broker or
+  strategy-mutation path.
+- Documented the record contract and remaining adapter work in
+  `research/overnight_equities/AGENT_SHADOW.md`. No model integration or shadow
+  data collection has been started.
 
 ### Evidence already available
 
@@ -170,8 +187,9 @@ only in `~/.config/trading_lab/alpaca.env` with mode `0600`, and rerun the check
    median round-trip slippage under 8 bps continues to 250 sessions; 8–12 bps
    is marginal and requires a measured gross edge above measured cost; over 12
    bps archives the overnight line.
-5. After the deterministic measurement is stable, implement the research-driven
-   agent under the priority above and preregister its shadow-mode window.
+5. After the deterministic measurement is stable, preregister the research
+   agent's shadow window, then add the model/data adapter and outcome/review
+   event path described in `research/overnight_equities/AGENT_SHADOW.md`.
 6. Before any real capital is considered, require all gates in the plan:
    250+ quote-aware paper sessions, a positive bootstrap lower bound versus
    matched SPY, measured slippage within 2 bps of the model assumption, the
