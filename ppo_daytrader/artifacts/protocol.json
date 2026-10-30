@@ -1,0 +1,40 @@
+{
+  "frozen_utc": "2026-10-30",
+  "markets": [
+    "spot",
+    "perp"
+  ],
+  "test_years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "train_start": "2018-01-01",
+  "val_days": 183,
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "decision": "greedy action of the seed-averaged policy probabilities",
+  "checkpoint": "highest validation mean daily log return, evaluated every 10 updates",
+  "primary_metric": "mean daily net return vs always-flat and vs intraday buy-and-hold, block-bootstrap 95% CI",
+  "variants": {
+    "mlp": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models",
+      "arch": "mlp",
+      "seeds": "[11, 22, 33]",
+      "updates": "400"
+    },
+    "deep": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models_deep",
+      "arch": "deep",
+      "seeds": "[11, 22]",
+      "updates": "150",
+      "epochs": "3"
+    }
+  }
+}

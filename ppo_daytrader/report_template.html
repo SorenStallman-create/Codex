@@ -1,0 +1,469 @@
+<title>PPO Day Trader</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single research ledger column (max 1080px); each section = claim, then the evidence chart beneath it. */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --ink: #161a22; --muted: #5b6372; --line: #dde1e8;
+  --accent: #2f5bd3; --long: #1d8a5a; --short: #c2453d; --flat: #8a93a3; --warn: #b7791f;
+  --grid: #e9ecf1; --heat-lo: #c2453d; --heat-mid: #f2f3f5; --heat-hi: #1d8a5a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1218; --surface: #161a22; --ink: #e7eaf0; --muted: #98a1b2; --line: #2a303c;
+  --accent: #7d9bff; --long: #3fbf86; --short: #f07167; --flat: #7c8596; --warn: #e0a64a;
+  --grid: #222834; --heat-lo: #f07167; --heat-mid: #1c212b; --heat-hi: #3fbf86; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1218; --surface: #161a22; --ink: #e7eaf0; --muted: #98a1b2; --line: #2a303c;
+  --accent: #7d9bff; --long: #3fbf86; --short: #f07167; --flat: #7c8596; --warn: #e0a64a;
+  --grid: #222834; --heat-lo: #f07167; --heat-mid: #1c212b; --heat-hi: #3fbf86; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px }
+main { max-width: 1080px; margin: 0 auto; display: grid; gap: 56px }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15 }
+h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; letter-spacing: -0.01em }
+h2 { font-size: 26px; font-weight: 700 }
+h3 { font-size: 17px; font-weight: 500 }
+p { margin: 0; max-width: 68ch }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.mono, td.n, .tick { font-family: var(--mono); font-variant-numeric: tabular-nums }
+section { display: grid; gap: 18px; min-width: 0 }
+header.top { padding-top: 40px; display: grid; gap: 16px }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface) }
+.seg button { font: 500 13px var(--body); color: var(--muted); background: none; border: 0; padding: 7px 14px; cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface) }
+.seg button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+select { font: 13px var(--body); padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink) }
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; min-width: 0 }
+.stat .v { font: 500 24px var(--mono); font-variant-numeric: tabular-nums }
+.stat .s { font-size: 13px; color: var(--muted) }
+.pill { display: inline-block; font: 500 11px var(--mono); padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; letter-spacing: .04em }
+.good { color: var(--long) } .bad { color: var(--short) } .meh { color: var(--warn) }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; grid-template-columns: minmax(0, 1fr) }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px }
+.scroll { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 13px }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap }
+th:first-child, td:first-child { text-align: left }
+th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+tr.hl td { background: color-mix(in srgb, var(--accent) 9%, transparent) }
+svg { display: block; width: 100%; height: auto; overflow: visible }
+svg text { fill: var(--muted); font: 11px var(--mono) }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted) }
+.legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px }
+.note { font-size: 13px; color: var(--muted) }
+ol.limits { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 72ch }
+.arch { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap }
+.arch .blk { flex: 1 1 140px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); display: grid; gap: 2px; min-width: 0 }
+.arch .blk b { font: 500 13px var(--mono) }
+.arch .blk span { font-size: 12px; color: var(--muted) }
+.arch .arrow { align-self: center; color: var(--muted); font-family: var(--mono) }
+@media (max-width: 600px) { .arch .arrow { display: none } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<main>
+  <header class="top">
+    <div class="eyebrow">Mosaic · Trading Lab research · BTC/USD 15-minute sessions · paper only</div>
+    <h1>PPO Day Trader</h1>
+    <p id="lede"></p>
+  </header>
+
+  <div class="bar">
+    <span class="eyebrow">Market model</span>
+    <div class="seg" role="group" aria-label="Market model">
+      <button id="mk-spot" aria-pressed="true">Spot long/flat · 0.20%/side</button>
+      <button id="mk-perp" aria-pressed="false">Perp long/short · 0.06%/side</button>
+    </div>
+    <span class="eyebrow">Network</span>
+    <div class="seg" role="group" aria-label="Network">
+      <button id="nn-mlp" aria-pressed="true">Compact · 2×64</button>
+      <button id="nn-deep" aria-pressed="false">Deep · conv over raw bars</button>
+    </div>
+  </div>
+
+  <section>
+    <div class="eyebrow">Verdict · pooled out-of-sample test years</div>
+    <div class="verdict" id="verdict"></div>
+    <p id="verdict-text"></p>
+  </section>
+
+  <section>
+    <h2>How it trades</h2>
+    <div class="two">
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Rules of the game</h3>
+        <p class="note" id="rules"></p>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Walk-forward folds</h3>
+        <div id="folds"></div>
+        <div class="legend"><span><i style="background:var(--flat)"></i>train</span><span><i style="background:var(--warn)"></i>validation (checkpoint pick)</span><span><i style="background:var(--accent)"></i>untouched test year</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Scoreboard</h2>
+    <p class="note">Every strategy plays the same sessions with the same fills and costs. Mean daily net return with a 7-day block-bootstrap 95% interval. "vs intraday B&amp;H" is the paired daily difference.</p>
+    <div class="panel scroll"><table id="score"></table></div>
+    <div class="panel" style="display:grid;gap:10px">
+      <h3>Pooled out-of-sample equity, 2021 to 2026 (log scale)</h3>
+      <div id="equity"></div><div class="legend" id="equity-legend"></div>
+    </div>
+    <div class="panel scroll" style="display:grid;gap:10px">
+      <h3>Mean %/day by test year</h3>
+      <table id="years"></table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Does a bigger network help?</h2>
+    <p class="note">The capacity test. The deep network reads the last 16 hours of raw bars (return, upper and lower wicks, gap, volume, range) through a dilated convolution, plus the same engineered features, plus VIX context from the Equibles connector. Same environment, costs, folds and checkpoint rule. All test days pooled.</p>
+    <div class="panel scroll"><table id="capacity"></table></div>
+  </section>
+
+  <section>
+    <h2>Is there anything to learn?</h2>
+    <p class="note">A first-principles ceiling check. If a plain linear forecast of the next bar can't rank returns out of sample, a reinforcement learner on the same inputs has little to find either. Rank IC is the Spearman correlation between the forecast and the realized 15-minute return.</p>
+    <div class="two">
+      <div class="panel scroll"><table id="ceiling"></table></div>
+      <div class="panel scroll" style="display:grid;gap:10px"><h3>Cost stress on the frozen ensemble, mean %/day</h3><table id="stress"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Inside the network</h2>
+    <div class="arch" id="arch"></div>
+    <p class="note" id="arch-note"></p>
+
+    <div class="panel" style="display:grid;gap:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <h3>Training curves</h3>
+        <label class="note">Fold <select id="fold-pick"></select></label>
+      </div>
+      <div class="two">
+        <div><div class="eyebrow">Validation %/day (checkpoint marked)</div><div id="tc-val"></div></div>
+        <div><div class="eyebrow">Policy entropy (nats)</div><div id="tc-ent"></div></div>
+        <div><div class="eyebrow">Trades per day, training rollouts</div><div id="tc-trd"></div></div>
+        <div><div class="eyebrow">Critic explained variance</div><div id="tc-ev"></div></div>
+      </div>
+      <div class="legend" id="tc-legend"></div>
+    </div>
+
+    <div class="two">
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>What moves the long-vs-flat decision</h3>
+        <p class="note">Integrated gradients from the test-set mean input, averaged over the seed ensemble. Bar = mean absolute contribution to the logit margin; tick = mean signed contribution.</p>
+        <div id="ig"></div>
+        <div id="lag-wrap" hidden><div class="eyebrow">Deep model: attribution by bar age, summed over channels</div><div id="lag"></div></div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>What the result depends on</h3>
+        <p class="note">Shuffle one input across days during live play and re-score the latest test year. A large drop means the strategy relies on that input.</p>
+        <div id="perm"></div>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Last hidden layer vs inputs</h3>
+        <p class="note" id="corr-note"></p>
+        <div class="scroll" id="corr"></div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Hidden state map</h3>
+        <p class="note" id="pca-note"></p>
+        <div id="pca"></div>
+      </div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:10px">
+      <h3>Policy surface</h3>
+      <p class="note" id="surf-note"></p>
+      <div id="surface" style="max-width:520px"></div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <h3>Session replay</h3>
+        <div class="seg" role="group" aria-label="Replay day">
+          <button id="rp-best" aria-pressed="false">Best day</button>
+          <button id="rp-median" aria-pressed="true">Median day</button>
+          <button id="rp-worst" aria-pressed="false">Worst day</button>
+        </div>
+      </div>
+      <p class="note" id="rp-note"></p>
+      <div id="replay"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Limits</h2>
+    <ol class="limits" id="limits"></ol>
+  </section>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+let MK = 'spot', FOLD = null, DAY = 'median', NN = 'mlp';
+const R = () => D.models[NN];
+const NAMES = {ppo_ensemble:'PPO ensemble', ppo_seed11:'PPO seed 11', ppo_seed22:'PPO seed 22', ppo_seed33:'PPO seed 33', flat:'Always flat',
+  intraday_buy_hold:'Intraday buy & hold', momentum_1h:'Momentum 1h', momentum_4h:'Momentum 4h', reversion_1h:'Reversion 1h',
+  linear_forecast:'Linear forecast', random_matched:'Random, matched turnover'};
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const f = (x, d=3) => (x >= 0 ? '+' : '') + x.toFixed(d);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const SVG = (w, h, body) => `<svg viewBox="0 0 ${w} ${h}" role="img">${body}</svg>`;
+
+function lineChart(series, {w=520, h=200, logY=false, marks=[], zero=false, xlab=null}={}) {
+  const pad = {l: 48, r: 10, t: 8, b: 22};
+  const all = series.flatMap(s => s.y.filter(v => v != null && isFinite(v)).map(v => logY ? Math.log(v) : v));
+  let lo = Math.min(...all), hi = Math.max(...all); if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0) }
+  if (hi - lo < 1e-9) { hi += 1; lo -= 1 }
+  const n = Math.max(...series.map(s => s.y.length));
+  const X = i => pad.l + (w - pad.l - pad.r) * i / Math.max(1, n - 1);
+  const Y = v => pad.t + (h - pad.t - pad.b) * (1 - ((logY ? Math.log(v) : v) - lo) / (hi - lo));
+  let g = '';
+  for (let k = 0; k <= 4; k++) {
+    const vv = lo + (hi - lo) * k / 4, yy = pad.t + (h - pad.t - pad.b) * (1 - k / 4);
+    const lab = logY ? Math.exp(vv).toFixed(Math.exp(vv) < 10 ? 2 : 0) + '×' : (Math.abs(vv) < 10 ? vv.toFixed(2) : vv.toFixed(0));
+    g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${yy}" y2="${yy}" stroke="${css('--grid')}"/><text x="${pad.l - 6}" y="${yy + 4}" text-anchor="end">${lab}</text>`;
+  }
+  if (zero && lo < 0 && hi > 0) g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${Y(logY?1:0)}" y2="${Y(logY?1:0)}" stroke="${css('--muted')}" stroke-dasharray="3 3"/>`;
+  if (xlab) xlab.forEach(([i, t]) => g += `<text x="${X(i)}" y="${h - 6}" text-anchor="middle">${esc(t)}</text>`);
+  for (const s of series) {
+    let d = '', pen = false;
+    s.y.forEach((v, i) => { if (v == null || !isFinite(v) || (logY && v <= 0)) { pen = false; return } d += (pen ? 'L' : 'M') + X(s.x ? s.x[i] : i).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true });
+    g += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="${s.wd || 1.6}" ${s.dash ? 'stroke-dasharray="4 3"' : ''} opacity="${s.op || 1}"/>`;
+  }
+  marks.forEach(m => g += `<circle cx="${X(m.i)}" cy="${Y(m.v)}" r="4" fill="${m.c}" stroke="${css('--surface')}" stroke-width="1.5"/>`);
+  return SVG(w, h, g);
+}
+
+function heatColor(v, lim) {
+  const t = Math.max(-1, Math.min(1, v / (lim || 1)));
+  const a = css(t < 0 ? '--heat-lo' : '--heat-hi');
+  return `color-mix(in srgb, ${a} ${Math.round(Math.abs(t) * 85)}%, ${css('--heat-mid')})`;
+}
+
+function hbars(rows, {w=520, signed=null, unit=''}={}) {
+  const rh = 20, pad = 120, h = rows.length * rh + 10;
+  const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1e-9);
+  const zeroX = rows.some(r => r.v < 0) ? pad + (w - pad - 60) / 2 : pad;
+  const span = rows.some(r => r.v < 0) ? (w - pad - 60) / 2 : (w - pad - 60);
+  let g = `<line x1="${zeroX}" x2="${zeroX}" y1="0" y2="${h - 6}" stroke="${css('--line')}"/>`;
+  rows.forEach((r, i) => {
+    const y = i * rh + 4, len = Math.abs(r.v) / mx * span, x = r.v < 0 ? zeroX - len : zeroX;
+    g += `<text x="${pad - 8}" y="${y + 12}" text-anchor="end">${esc(r.k)}</text>`;
+    g += `<rect x="${x}" y="${y + 2}" width="${Math.max(len, 0.5)}" height="${rh - 8}" rx="2" fill="${r.c || css('--accent')}" opacity="0.85"/>`;
+    if (r.s != null) { const sx = zeroX + r.s / mx * span; g += `<line x1="${sx}" x2="${sx}" y1="${y}" y2="${y + rh - 4}" stroke="${css('--ink')}" stroke-width="2"/>` }
+    g += `<text x="${(r.v < 0 ? zeroX : x + len) + 6}" y="${y + 12}">${r.lab ?? (r.v.toFixed(3) + unit)}</text>`;
+  });
+  return SVG(w, h, g);
+}
+
+function render() {
+  const M = R().markets[MK], P = M.pooled, years = Object.keys(M.years);
+  const ppo = P.ppo_ensemble, bh = P.intraday_buy_hold;
+  const ci = ppo.ci95_mean_day_pct, cib = ppo.vs_intraday_bh_ci95_pct;
+  const sigFlat = ci[0] > 0 ? 'good' : ci[1] < 0 ? 'bad' : 'meh';
+  const sigBh = cib[0] > 0 ? 'good' : cib[1] < 0 ? 'bad' : 'meh';
+  const lab = {good: 'beats', bad: 'loses to', meh: 'not distinguishable from'};
+  document.getElementById('verdict').innerHTML = [
+    ['PPO ensemble, mean per day', f(ppo.mean_day_pct, 3) + '%', `95% CI ${f(ci[0], 3)} to ${f(ci[1], 3)}`, sigFlat, lab[sigFlat] + ' flat'],
+    ['vs intraday buy & hold', f(ppo.vs_intraday_bh_mean_pct, 3) + '%', `95% CI ${f(cib[0], 3)} to ${f(cib[1], 3)}`, sigBh, lab[sigBh] + ' B&H'],
+    ['Sharpe (annualized)', ppo.sharpe_ann.toFixed(2), `B&H intraday ${bh.sharpe_ann.toFixed(2)}`, null, null],
+    ['Activity', ppo.trades_per_day.toFixed(2) + ' trades/day', `${ppo.exposure_pct.toFixed(0)}% of bars in a position · ${ppo.days} test days`, null, null],
+  ].map(([t, v, s, cl, pl]) => `<div class="stat"><span class="eyebrow">${t}</span><span class="v">${v}</span><span class="s">${s}</span>${pl ? `<span><span class="pill ${cl}">${pl}</span></span>` : ''}</div>`).join('');
+  document.getElementById('verdict-text').textContent = verdictFor(MK);
+  renderCapacity();
+  const a = R().data_audit;
+  document.getElementById('rules').innerHTML =
+    `Bitstamp BTC/USD 1-minute candles (${a.first_minute_utc.slice(0, 10)} to ${a.last_minute_utc.slice(0, 10)}) resampled to 15-minute bars; ${a.sessions_usable.toLocaleString()} complete UTC days kept, ${a.days_excluded} excluded for gaps or outages. ` +
+    `Each session starts flat at 00:00 UTC and is forced flat at the close of the last bar. The agent picks a target position at the open of every bar using only completed bars, so the fill is the next bar's open. ` +
+    `${MK === 'spot' ? 'Spot: long or flat, 0.15% fee + 0.05% slippage per side, matching the Trading Lab cost model.' : 'Perp proxy: short, flat or long, 0.05% taker + 0.01% slippage per side, plus 0.01% funding for each 08:00/16:00 UTC stamp held. Prices are spot, so basis is ignored.'} ` +
+    `Reward is the log growth of equity after costs. Hyperparameters were frozen before any test year was scored.`;
+  // folds timeline
+  const tr = M.training, t0 = Date.parse('2018-01-01'), t1 = Date.parse('2026-12-31'), W = 520, rh = 20;
+  const X = d => 60 + (W - 70) * (Date.parse(d) - t0) / (t1 - t0);
+  let g = '';
+  years.forEach((y, i) => {
+    const m = tr[y][0].meta, yy = i * rh + 4, te = M.years[y].test_range;
+    g += `<text x="52" y="${yy + 12}" text-anchor="end">${y}</text>`;
+    g += `<rect x="${X(m.train_range[0])}" y="${yy + 3}" width="${X(m.train_range[1]) - X(m.train_range[0])}" height="${rh - 8}" fill="${css('--flat')}" opacity=".55"/>`;
+    g += `<rect x="${X(m.val_range[0])}" y="${yy + 3}" width="${X(m.val_range[1]) - X(m.val_range[0])}" height="${rh - 8}" fill="${css('--warn')}"/>`;
+    g += `<rect x="${X(te[0])}" y="${yy + 3}" width="${X(te[1]) - X(te[0])}" height="${rh - 8}" fill="${css('--accent')}"/>`;
+  });
+  for (let yr = 2018; yr <= 2026; yr += 2) g += `<text x="${X(yr + '-01-01')}" y="${years.length * rh + 18}" text-anchor="middle">${yr}</text>`;
+  document.getElementById('folds').innerHTML = SVG(W, years.length * rh + 24, g);
+  // scoreboard
+  const order = ['ppo_ensemble', 'ppo_seed11', 'ppo_seed22', 'ppo_seed33', 'flat', 'intraday_buy_hold', 'momentum_1h', 'momentum_4h', 'reversion_1h', 'linear_forecast', 'random_matched'];
+  document.getElementById('score').innerHTML = `<tr><th>Strategy</th><th>%/day</th><th>95% CI</th><th>vs intraday B&amp;H</th><th>Sharpe</th><th>Total</th><th>Max DD</th><th>Trades/day</th><th>In market</th></tr>` +
+    order.filter(k => P[k]).map(k => { const r = P[k], c = r.ci95_mean_day_pct, cl = c[0] > 0 ? 'good' : c[1] < 0 ? 'bad' : '';
+      return `<tr class="${k === 'ppo_ensemble' ? 'hl' : ''}"><td>${NAMES[k]}</td><td class="n ${cl}">${f(r.mean_day_pct)}</td><td class="n">${f(c[0])} … ${f(c[1])}</td><td class="n">${f(r.vs_intraday_bh_mean_pct)}</td><td class="n">${r.sharpe_ann.toFixed(2)}</td><td class="n">${f(r.total_return_pct, 1)}%</td><td class="n">${r.max_drawdown_pct.toFixed(1)}%</td><td class="n">${r.trades_per_day.toFixed(2)}</td><td class="n">${r.exposure_pct.toFixed(0)}%</td></tr>` }).join('');
+  // equity
+  const eqs = [['ppo_ensemble', css('--accent'), 2.2], ['intraday_buy_hold', css('--ink'), 1.4], ['linear_forecast', css('--warn'), 1.4], ['random_matched', css('--long'), 1.2], ['flat', css('--flat'), 1.2]];
+  let cum = 0; const xl = [];
+  years.forEach(y => { xl.push([cum, y]); cum += M.years[y].ppo_ensemble.days });
+  document.getElementById('equity').innerHTML = lineChart(eqs.map(([k, c, wd]) => ({y: [1, ...P[k].equity], c, wd})), {w: 1000, h: 300, logY: true, xlab: xl});
+  document.getElementById('equity-legend').innerHTML = eqs.map(([k, c]) => `<span><i style="background:${c}"></i>${NAMES[k]}</span>`).join('') + '<span>Momentum and reversion rules fall off the bottom of this scale.</span>';
+  // per-year
+  const yk = ['ppo_ensemble', 'intraday_buy_hold', 'momentum_1h', 'momentum_4h', 'reversion_1h', 'linear_forecast', 'random_matched'];
+  const lim = Math.max(...years.flatMap(y => yk.map(k => Math.abs(M.years[y][k].mean_day_pct))));
+  document.getElementById('years').innerHTML = `<tr><th>Strategy</th>${years.map(y => `<th>${y}</th>`).join('')}</tr>` +
+    `<tr><td class="note">BTC over the year</td>${years.map(y => `<td class="n">${f(M.years[y].btc_close_to_close_pct, 0)}%</td>`).join('')}</tr>` +
+    yk.map(k => `<tr class="${k === 'ppo_ensemble' ? 'hl' : ''}"><td>${NAMES[k]}</td>${years.map(y => { const v = M.years[y][k].mean_day_pct; return `<td class="n" style="background:${heatColor(v, lim)}">${f(v)}</td>` }).join('')}</tr>`).join('');
+  // ceiling & stress
+  document.getElementById('ceiling').innerHTML = `<tr><th>Test year</th><th>Linear IC, in-sample</th><th>Linear IC, test</th><th>PPO preference IC, test</th></tr>` +
+    years.map(y => { const s = M.years[y].signal_ceiling; return `<tr><td>${y}</td><td class="n">${f(s.linear_ic_train)}</td><td class="n">${f(s.linear_ic_test)}</td><td class="n">${f(s.ppo_score_ic_test)}</td></tr>` }).join('');
+  document.getElementById('stress').innerHTML = `<tr><th>Test year</th><th>0× cost</th><th>0.5×</th><th>1× (base)</th><th>2×</th></tr>` +
+    years.map(y => { const s = M.years[y].cost_stress; return `<tr><td>${y}</td>${['0.0', '0.5', '1.0', '2.0'].map(k => `<td class="n" style="background:${heatColor(s[k], lim)}">${f(s[k])}</td>`).join('')}</tr>` }).join('');
+  renderNet();
+}
+
+function renderNet() {
+  const M = R().markets[MK], I = M.inspection, years = Object.keys(M.years);
+  const s = M.training[years[0]][0];
+  const nIn = R().inputs.length, nA = M.positions.length;
+  const acts = M.positions.map(p => p > 0 ? 'long' : p < 0 ? 'short' : 'flat').join(' / ');
+  document.getElementById('arch').innerHTML = (NN === 'deep' ? [
+    ['64 bars × 6 channels', 'return, wicks, gap, volume, range'], ['Dilated conv ×4', 'kernel 5, dilation 1-2-4-8, 32→48 ch'],
+    ['Fuse', 'last + mean conv state, 17 features, 2 VIX, 3 state'], ['Linear 128 ×2 · GELU', 'shared trunk'],
+    [`Policy head · ${nA}`, acts + ' (+ value head)'],
+  ] : [
+    [`${nIn} inputs`, '17 market features + position, time left, open P&L'],
+    ['Linear 64 · tanh', `${nIn * 64 + 64} params`], ['Linear 64 · tanh', `${64 * 64 + 64} params`],
+    [`Policy head · ${nA}`, acts],
+  ]).map(([b, sp], i) => (i ? '<span class="arrow">→</span>' : '') + `<div class="blk"><b>${b}</b><span>${sp}</span></div>`).join('');
+  document.getElementById('arch-note').textContent = (NN === 'deep' ? 'Actor and critic share the convolutional encoder and trunk. The receptive field covers all 64 bars. ' : 'Actor and critic are separate two-layer MLPs of the same shape (critic ends in one value output). ') +
+    `${s.summary.total_params.toLocaleString()} parameters per seed. PPO: ${s.config.updates} updates × ${s.config.n_envs} sessions × 96 bars, clip ${s.config.clip}, γ ${s.config.gamma}, λ ${s.config.lam}, entropy ${s.config.ent_coef}, lr ${s.config.lr} linearly annealed. ${M.training[years[0]].length} seeds per fold; the ensemble averages their action probabilities.`;
+  // training curves
+  const fp = document.getElementById('fold-pick');
+  if (!FOLD || !years.includes(FOLD)) FOLD = years[years.length - 1];
+  fp.innerHTML = years.map(y => `<option value="${y}" ${y === FOLD ? 'selected' : ''}>test ${y}</option>`).join('');
+  const runs = M.training[FOLD], cols = [css('--accent'), css('--long'), css('--warn')];
+  const sm = (a, k = 9) => a.map((_, i) => { const w = a.slice(Math.max(0, i - k), i + 1); return w.reduce((p, q) => p + q, 0) / w.length });
+  const valSer = runs.map((r, i) => { const pts = r.history.filter(h => h.val_day_log_pct != null); return {x: pts.map(h => h.update), y: pts.map(h => h.val_day_log_pct), c: cols[i]} });
+  const nU = runs[0].history.length;
+  const pad = s => ({...s, x: undefined, y: Array.from({length: nU}, (_, i) => { const j = s.x.indexOf(i); return j < 0 ? null : s.y[j] })});
+  const valFull = valSer.map(pad).map(s => ({...s, y: fillGaps(s.y)}));
+  document.getElementById('tc-val').innerHTML = lineChart(valFull, {zero: true, marks: runs.map((r, i) => ({i: r.meta.best_update, v: r.meta.best_val_day_log_pct, c: cols[i]}))});
+  document.getElementById('tc-ent').innerHTML = lineChart(runs.map((r, i) => ({y: r.history.map(h => h.ent), c: cols[i]})), {zero: true});
+  document.getElementById('tc-trd').innerHTML = lineChart(runs.map((r, i) => ({y: sm(r.history.map(h => h.trades_per_day)), c: cols[i]})), {zero: true});
+  document.getElementById('tc-ev').innerHTML = lineChart(runs.map((r, i) => ({y: sm(r.history.map(h => h.explained_var)), c: cols[i]})));
+  document.getElementById('tc-legend').innerHTML = runs.map((r, i) => `<span><i style="background:${cols[i]}"></i>seed ${r.meta.seed} · picked update ${r.meta.best_update} (val ${f(r.meta.best_val_day_log_pct)}%/day)</span>`).join('') +
+    `<span>train ${runs[0].meta.train_range.join(' → ')} · val ${runs[0].meta.val_range.join(' → ')}</span>`;
+  // IG
+  const key = Object.keys(I.integrated_gradients)[0], ig = I.integrated_gradients;
+  const igRows = ig['long_vs_flat'].names.map((k, i) => ({k, v: ig['long_vs_flat'].mean_abs[i], s: ig['long_vs_flat'].mean_signed[i]})).sort((a, b) => b.v - a.v);
+  document.getElementById('ig').innerHTML = hbars(igRows);
+  document.getElementById('lag-wrap').hidden = !I.lag_profile;
+  if (I.lag_profile) {
+    const ch = Object.keys(I.lag_profile), L = I.lag_profile[ch[0]].length;
+    const tot = Array.from({length: L}, (_, t) => ch.reduce((a, c) => a + I.lag_profile[c][t], 0));
+    document.getElementById('lag').innerHTML = lineChart([{y: tot, c: css('--accent'), wd: 2}], {h: 150, xlab: [[0, '16h ago'], [L - 33, '8h'], [L - 5, '1h'], [L - 1, 'now']]});
+  }
+  const pm = M.permutation, pmRows = R().inputs.map(k => ({k, v: pm[k].delta_day_log_pct, c: pm[k].delta_day_log_pct < 0 ? css('--short') : css('--long'), lab: f(pm[k].delta_day_log_pct, 3) + '%/day'})).sort((a, b) => a.v - b.v);
+  document.getElementById('perm').innerHTML = hbars(pmRows);
+  // corr heatmap
+  const C = I.unit_input_corr, CI = I.corr_inputs, nu = Math.min(24, C[0].length), cw = 18, ch = 16, lx = 90, hW = lx + nu * cw + 4, hH = (CI.length + 1) * ch + 30;
+  let g = '';
+  document.getElementById('corr-note').textContent = `Correlation of each of the 24 most input-driven units of ${I.hidden_desc} (columns) with each input (rows)${NN === 'deep' ? ', where each raw-bar channel is represented by its newest bar' : ''}. The bottom row is that unit's weight toward "long" in the action head.`;
+  CI.forEach((k, r) => { g += `<text x="${lx - 6}" y="${r * ch + 12}" text-anchor="end">${k}</text>`; C[r].slice(0, nu).forEach((v, c) => g += `<rect x="${lx + c * cw}" y="${r * ch}" width="${cw - 1}" height="${ch - 1}" fill="${heatColor(v, 1)}"><title>${k} × unit ${I.unit_order[c]}: ${v.toFixed(2)}</title></rect>`) });
+  const hw = I.head_weights.long_vs_flat, hm = Math.max(...hw.map(Math.abs));
+  const ry = CI.length * ch + 6;
+  g += `<text x="${lx - 6}" y="${ry + 12}" text-anchor="end">→ long weight</text>`;
+  hw.slice(0, nu).forEach((v, c) => g += `<rect x="${lx + c * cw}" y="${ry}" width="${cw - 1}" height="${ch - 1}" fill="${heatColor(v, hm)}"><title>unit ${I.unit_order[c]} long-vs-flat weight ${v.toFixed(3)}</title></rect>`);
+  g += `<text x="${lx}" y="${hH - 4}">units, sorted by strongest input link →</text>`;
+  document.getElementById('corr').innerHTML = `<div style="min-width:${hW}px">${SVG(hW, hH, g)}</div>`;
+  // PCA
+  const pc = I.pca, li = M.positions.indexOf(1);
+  const xs = pc.xy.map(p => p[0]), ys = pc.xy.map(p => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const pw = 520, ph = 300; g = '';
+  pc.xy.forEach((p, i) => { const pl = pc.p_action[i][li], ps = M.positions.includes(-1) ? pc.p_action[i][0] : 0;
+    const col = pl > ps ? `color-mix(in srgb, ${css('--long')} ${Math.round(pl * 100)}%, ${css('--flat')})` : `color-mix(in srgb, ${css('--short')} ${Math.round(ps * 100)}%, ${css('--flat')})`;
+    g += `<circle cx="${10 + (pw - 20) * (p[0] - x0) / (x1 - x0)}" cy="${10 + (ph - 20) * (1 - (p[1] - y0) / (y1 - y0))}" r="2.4" fill="${col}" opacity=".7"/>` });
+  document.getElementById('pca').innerHTML = SVG(pw, ph, g);
+  document.getElementById('pca-note').textContent = `1,500 test-year states projected onto the first two principal components of hidden layer 2 (${(pc.explained[0] * 100).toFixed(0)}% and ${(pc.explained[1] * 100).toFixed(0)}% of variance). Green = the policy prefers long${M.positions.includes(-1) ? ', red = prefers short' : ''}, grey = prefers flat. Clean separation means the layer has organized states by decision. Dead units: ${I.dead_units_pct.toFixed(0)}%; saturated activations: ${I.saturated_pct.toFixed(0)}%.`;
+  // surface
+  const S = I.surface, n = S.grid.length, cs = 18; g = '';
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const p = S.probs[i * n + j], v = p[li] - (M.positions.includes(-1) ? p[0] : p[M.positions.indexOf(0)]);
+    g += `<rect x="${50 + j * cs}" y="${(n - 1 - i) * cs}" width="${cs}" height="${cs}" fill="${heatColor(v, 1)}"><title>${S.x}=${S.grid[i].toFixed(2)}, ${S.y}=${S.grid[j].toFixed(2)}: ${p.map(q => q.toFixed(2)).join(' / ')}</title></rect>` }
+  [0, 6, 12, 18, 24].forEach(k => { g += `<text x="${50 + k * cs + cs / 2}" y="${n * cs + 14}" text-anchor="middle">${S.grid[k].toFixed(1)}</text><text x="44" y="${(n - 1 - k) * cs + 13}" text-anchor="end">${S.grid[k].toFixed(1)}</text>` });
+  g += `<text x="${50 + n * cs / 2}" y="${n * cs + 30}" text-anchor="middle">${S.y} →</text><text x="0" y="-6">↑ ${S.x}</text>`;
+  document.getElementById('surface').innerHTML = SVG(50 + n * cs + 10, n * cs + 36, g);
+  document.getElementById('surf-note').textContent = `Ensemble preference (P(long) minus P(${M.positions.includes(-1) ? 'short' : 'flat'})) while sweeping the two inputs with the largest attributions, ${S.x} and ${S.y}, in trailing-volatility units. Everything else is held at its test-year mean, flat, at mid-session. Green prefers long, red prefers ${M.positions.includes(-1) ? 'short' : 'flat'}.`;
+  renderReplay();
+}
+
+function fillGaps(a) { const o = a.slice(); let last = null; for (let i = 0; i < o.length; i++) { if (o[i] == null) o[i] = last; else last = o[i] } return o }
+
+function renderReplay() {
+  const M = R().markets[MK], RP = M.inspection.replays[DAY], W = 1000;
+  const li = M.positions.indexOf(1), si = M.positions.indexOf(-1);
+  const pad = 48, X = i => pad + (W - pad - 10) * i / 95;
+  const lo = Math.min(...RP.close, ...RP.open), hi = Math.max(...RP.close, ...RP.open), H1 = 200;
+  const Y = v => 8 + (H1 - 20) * (1 - (v - lo) / (hi - lo));
+  let g = '';
+  RP.held.forEach((p, i) => { if (p) g += `<rect x="${X(i) - (W - pad) / 192}" y="0" width="${(W - pad) / 96}" height="${H1}" fill="${p > 0 ? css('--long') : css('--short')}" opacity=".13"/>` });
+  for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3; g += `<text x="${pad - 6}" y="${Y(v) + 4}" text-anchor="end">${v.toFixed(0)}</text><line x1="${pad}" x2="${W - 10}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--grid')}"/>` }
+  g += `<path d="${RP.close.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join('')}" fill="none" stroke="${css('--ink')}" stroke-width="1.6"/>`;
+  // probabilities
+  const H2 = 90, o2 = H1 + 16;
+  g += `<text x="${pad - 6}" y="${o2 + 10}" text-anchor="end">P=1</text><text x="${pad - 6}" y="${o2 + H2}" text-anchor="end">0</text><line x1="${pad}" x2="${W - 10}" y1="${o2 + H2}" y2="${o2 + H2}" stroke="${css('--grid')}"/>`;
+  const pline = (k, c) => `<path d="${RP.probs.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + (o2 + H2 * (1 - p[k])).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="1.5"/>`;
+  g += pline(li, css('--long')); if (si >= 0) g += pline(si, css('--short'));
+  // hidden units
+  const o3 = o2 + H2 + 18, uh = 6;
+  RP.h2.forEach((row, u) => row.forEach((v, i) => g += `<rect x="${X(i) - (W - pad) / 192}" y="${o3 + u * uh}" width="${(W - pad) / 96 + .5}" height="${uh}" fill="${heatColor(v, 1)}"/>`));
+  g += `<text x="${pad - 6}" y="${o3 + 12}" text-anchor="end">units</text>`;
+  const o4 = o3 + RP.h2.length * uh;
+  [0, 24, 48, 72, 95].forEach(i => g += `<text x="${X(i)}" y="${o4 + 14}" text-anchor="middle">${String(Math.floor(i / 4)).padStart(2, '0')}:${String(i % 4 * 15).padStart(2, '0')}</text>`);
+  document.getElementById('replay').innerHTML = `<div class="scroll"><div style="min-width:640px">${SVG(W, o4 + 20, g)}</div></div>`;
+  document.getElementById('rp-note').textContent = `${RP.day} (UTC), latest test year. Net ${f(RP.day_ret_pct, 2)}% for the session. Top: BTC price with shaded bars where a position was held (green long${si >= 0 ? ', red short' : ''}). Middle: ensemble probability of long${si >= 0 ? ' (green) and short (red)' : ''}. Bottom: the 24 most input-driven units of ${M.inspection.hidden_desc} through the day.`;
+}
+
+function verdictText(mk) {
+  const M = R().markets[mk], P = M.pooled, p = P.ppo_ensemble;
+  const best = Object.entries(P).filter(([k]) => !k.startsWith('ppo')).sort((a, b) => b[1].mean_day_pct - a[1].mean_day_pct)[0];
+  return `Across ${p.days.toLocaleString()} untouched test days the ${mk === 'spot' ? 'spot' : 'perp'} ensemble averaged ${f(p.mean_day_pct, 3)}% per day after costs (${f(p.total_return_pct, 1)}% compounded), with ${p.trades_per_day.toFixed(2)} trades a day. The best simple baseline on the same days was ${NAMES[best[0]].toLowerCase()} at ${f(best[1].mean_day_pct, 3)}% per day.`;
+}
+
+function renderCapacity() {
+  const rows = [];
+  for (const mk of ['spot', 'perp']) for (const nn of ['mlp', 'deep']) {
+    const M = D.models[nn]?.markets[mk]; if (!M) continue;
+    const p = M.pooled.ppo_ensemble, c = p.ci95_mean_day_pct, cb = p.vs_intraday_bh_ci95_pct;
+    const val = Object.values(M.training).flat().map(r => r.meta.best_val_day_log_pct);
+    rows.push(`<tr class="${nn === NN && mk === MK ? 'hl' : ''}"><td>${mk === 'spot' ? 'Spot' : 'Perp'} · ${nn === 'mlp' ? 'compact' : 'deep'}</td><td class="n">${(Object.values(M.training)[0][0].summary.total_params).toLocaleString()}</td><td class="n">${f(val.reduce((a, b) => a + b, 0) / val.length)}</td><td class="n ${c[0] > 0 ? 'good' : c[1] < 0 ? 'bad' : ''}">${f(p.mean_day_pct)}</td><td class="n">${f(c[0])} … ${f(c[1])}</td><td class="n">${f(p.vs_intraday_bh_mean_pct)}</td><td class="n">${f(cb[0])} … ${f(cb[1])}</td><td class="n">${p.trades_per_day.toFixed(2)}</td><td class="n">${p.exposure_pct.toFixed(0)}%</td></tr>`);
+  }
+  document.getElementById('capacity').innerHTML = `<tr><th>Market · network</th><th>Params</th><th>Picked val %/day</th><th>Test %/day</th><th>95% CI</th><th>vs intraday B&amp;H</th><th>95% CI</th><th>Trades/day</th><th>In market</th></tr>` + rows.join('');
+}
+
+function setNet(n) { if (!D.models[n]) return; NN = n; ['mlp', 'deep'].forEach(k => document.getElementById('nn-' + k).setAttribute('aria-pressed', k === n)); FOLD = null; render() }
+function setMarket(m) { MK = m; ['spot', 'perp'].forEach(k => document.getElementById('mk-' + k).setAttribute('aria-pressed', k === m)); render() }
+function setDay(d) { DAY = d; ['best', 'median', 'worst'].forEach(k => document.getElementById('rp-' + k).setAttribute('aria-pressed', k === d)); renderReplay() }
+document.getElementById('mk-spot').onclick = () => setMarket('spot');
+document.getElementById('mk-perp').onclick = () => setMarket('perp');
+document.getElementById('nn-mlp').onclick = () => setNet('mlp');
+document.getElementById('nn-deep').onclick = () => setNet('deep');
+if (!D.models.deep) document.getElementById('nn-deep').disabled = true;
+['best', 'median', 'worst'].forEach(k => document.getElementById('rp-' + k).onclick = () => setDay(k));
+document.getElementById('fold-pick').onchange = e => { FOLD = e.target.value; renderNet() };
+const verdictFor = m => D.verdict?.[NN]?.[m] || verdictText(m);
+document.getElementById('lede').textContent = D.lede || '';
+document.getElementById('limits').innerHTML = (D.limits || []).map(l => `<li>${esc(l)}</li>`).join('');
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+new MutationObserver(render).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+render();
+</script>

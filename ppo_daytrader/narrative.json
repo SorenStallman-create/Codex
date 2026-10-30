@@ -1,0 +1,13 @@
+{
+  "lede": "A PPO-trained network that day trades BTC/USD on 15-minute bars. It starts every UTC day flat, sees only completed bars, pays realistic costs on every trade, and is scored one untouched year at a time from 2021 to 2026 against simple baselines. Switch the market model and the network at the top. Every chart below updates.",
+  "limits": [
+    "No version made money after costs. Spot PPO averaged -0.15% a day, with a 95% interval entirely below zero. It beat intraday buy and hold only by holding less, and it did no better than a random policy trading at the same rate.",
+    "There is a small, real signal. A plain linear forecast ranks the next 15-minute return with a rank IC of about 0.01 to 0.05 out of sample. At a typical 0.3% bar move, that is worth roughly 0.01% per trade, while a round trip costs 0.12% (perp) to 0.40% (spot). With zero costs, the same frozen spot ensemble is positive in 5 of 6 test years. The limit is cost per trade relative to edge, not network capacity.",
+    "The only strategy with an interval above zero is the perp linear forecast: +0.031% a day, trading 0.17 times a day. It was one of several baselines and the interval barely clears zero, so treat it as a lead to pre-register, not a result.",
+    "Perp results use Bitstamp spot prices, a flat 0.01% funding charge and fixed slippage. Real perp basis, funding swings and queue position are not modeled.",
+    "Fills are at the next bar's open plus fixed slippage. Spread widening in fast markets, partial fills and exchange outages beyond the excluded days are not modeled.",
+    "The deep network was added after the compact results were seen, at Soren's request, as a capacity test. Its settings were fixed before its test years were scored, but it is a second look at the same years.",
+    "Data is a single venue (Bitstamp) through a public mirror. 69 days with gaps or outages were dropped, and some of those were volatile days.",
+    "Paper research only. Nothing here sends orders."
+  ]
+}
