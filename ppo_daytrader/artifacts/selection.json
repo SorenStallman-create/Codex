@@ -1,0 +1,711 @@
+{
+  "rule": "highest mean validation return of the seed ensemble across the six folds",
+  "ranking": [
+    {
+      "variant": "linear_m15",
+      "market": "spot",
+      "val_score_day_pct": 0.0,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2022,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2023,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2024,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        }
+      ]
+    },
+    {
+      "variant": "season_h1",
+      "market": "spot",
+      "val_score_day_pct": 0.0,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        },
+        {
+          "year": 2022,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        },
+        {
+          "year": 2023,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        },
+        {
+          "year": 2024,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0,
+          "window": null
+        }
+      ]
+    },
+    {
+      "variant": "linear_m15",
+      "market": "spot_maker",
+      "val_score_day_pct": -0.00017218612253197077,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2022,
+          "val_day_pct": 0.009988722969829993,
+          "trades_per_day": 0.04395604395604396
+        },
+        {
+          "year": 2023,
+          "val_day_pct": 0.00838182321048524,
+          "trades_per_day": 0.011049723756906077
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.019403662915507058,
+          "trades_per_day": 0.02197802197802198
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        }
+      ]
+    },
+    {
+      "variant": "linear_h1",
+      "market": "spot",
+      "val_score_day_pct": -0.003893725002826355,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.02336235001695813,
+          "trades_per_day": 0.02197802197802198
+        },
+        {
+          "year": 2023,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2024,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        }
+      ]
+    },
+    {
+      "variant": "mlp",
+      "market": "spot",
+      "val_score_day_pct": -0.011211029510636988,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.26394330207457817,
+          "trades_per_day": 1.4285714285714286
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.05076975737503779,
+          "trades_per_day": 1.6593406593406594
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.15270064039364514,
+          "trades_per_day": 0.4972375690607735
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.10733273850071126,
+          "trades_per_day": 1.4065934065934067
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.03878756718162048,
+          "trades_per_day": 0.4114285714285714
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.018381224312614585,
+          "trades_per_day": 0.045714285714285714
+        }
+      ]
+    },
+    {
+      "variant": "linear_m15",
+      "market": "perp",
+      "val_score_day_pct": -0.017972023062165072,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.03936461279151069,
+          "trades_per_day": 0.18681318681318682
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.0426092866723105,
+          "trades_per_day": 0.24175824175824176
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.05955291568540507,
+          "trades_per_day": 0.1878453038674033
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.0132368403543138,
+          "trades_per_day": 0.3076923076923077
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.04465032020430099,
+          "trades_per_day": 0.14857142857142858
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0022811969262486642,
+          "trades_per_day": 0.08
+        }
+      ]
+    },
+    {
+      "variant": "linear_h1",
+      "market": "spot_maker",
+      "val_score_day_pct": -0.04814254430422901,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.0014642402652731514,
+          "trades_per_day": 0.4725274725274725
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.1695318559001619,
+          "trades_per_day": 0.6923076923076923
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.09154428883912304,
+          "trades_per_day": 0.19889502762430938
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.03143330031834816,
+          "trades_per_day": 0.13186813186813187
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.005118419497532156,
+          "trades_per_day": 0.045714285714285714
+        },
+        {
+          "year": 2026,
+          "val_day_pct": 0.0,
+          "trades_per_day": 0.0
+        }
+      ]
+    },
+    {
+      "variant": "mlp",
+      "market": "perp",
+      "val_score_day_pct": -0.062104683495845275,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.12795187542251832,
+          "trades_per_day": 3.3626373626373627
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.02477978929193421,
+          "trades_per_day": 4.329670329670329
+        },
+        {
+          "year": 2023,
+          "val_day_pct": 0.08814441308069274,
+          "trades_per_day": 2.430939226519337
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.198326626670523,
+          "trades_per_day": 2.3076923076923075
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.26994439218641,
+          "trades_per_day": 3.0514285714285716
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.09567358132941557,
+          "trades_per_day": 2.057142857142857
+        }
+      ]
+    },
+    {
+      "variant": "season_h1",
+      "market": "perp",
+      "val_score_day_pct": -0.07595603396434107,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.1648428679152255,
+          "trades_per_day": 2.0,
+          "window": [
+            0,
+            11,
+            -1
+          ]
+        },
+        {
+          "year": 2022,
+          "val_day_pct": 0.04449044504793078,
+          "trades_per_day": 2.0,
+          "window": [
+            5,
+            23,
+            1
+          ]
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.2734134316589687,
+          "trades_per_day": 2.0,
+          "window": [
+            5,
+            23,
+            1
+          ]
+        },
+        {
+          "year": 2024,
+          "val_day_pct": 0.03532052448559805,
+          "trades_per_day": 2.0,
+          "window": [
+            5,
+            23,
+            1
+          ]
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.05425808086636898,
+          "trades_per_day": 2.0,
+          "window": [
+            5,
+            23,
+            1
+          ]
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.15154895461174997,
+          "trades_per_day": 2.0,
+          "window": [
+            5,
+            23,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "variant": "m15_maker",
+      "market": "perp_maker",
+      "val_score_day_pct": -0.0798161418262534,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.30326961347422515,
+          "trades_per_day": 3.1648351648351647
+        },
+        {
+          "year": 2022,
+          "val_day_pct": 0.30789662208735386,
+          "trades_per_day": 2.021978021978022
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.04219551457458703,
+          "trades_per_day": 2.6408839779005526
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.2703633662586813,
+          "trades_per_day": 2.4725274725274726
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.10916461333748398,
+          "trades_per_day": 2.0914285714285716
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.06180036539989688,
+          "trades_per_day": 2.0114285714285716
+        }
+      ]
+    },
+    {
+      "variant": "m15_maker",
+      "market": "spot_maker",
+      "val_score_day_pct": -0.09271589959912652,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.2645895088523371,
+          "trades_per_day": 1.010989010989011
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.14008442769949783,
+          "trades_per_day": 1.7912087912087913
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.1467805774025103,
+          "trades_per_day": 0.4530386740331492
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.18994095985041312,
+          "trades_per_day": 1.945054945054945
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.0747033428229359,
+          "trades_per_day": 0.3314285714285714
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.269375598671739,
+          "trades_per_day": 1.4057142857142857
+        }
+      ]
+    },
+    {
+      "variant": "linear_h1",
+      "market": "perp",
+      "val_score_day_pct": -0.13350969769605012,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.14092263690425705,
+          "trades_per_day": 3.4835164835164836
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.0370008248889327,
+          "trades_per_day": 3.5164835164835164
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.3063180788951053,
+          "trades_per_day": 2.718232044198895
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.2923635052742049,
+          "trades_per_day": 2.241758241758242
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.13017430266554997,
+          "trades_per_day": 1.3257142857142856
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.1761241113567649,
+          "trades_per_day": 1.0514285714285714
+        }
+      ]
+    },
+    {
+      "variant": "h1",
+      "market": "spot_maker",
+      "val_score_day_pct": -0.13436146628639187,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.2745879841500059,
+          "trades_per_day": 1.2967032967032968
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.1353006458780754,
+          "trades_per_day": 1.3736263736263736
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.2079203392335442,
+          "trades_per_day": 1.6022099447513811
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.18952702433499294,
+          "trades_per_day": 1.5934065934065933
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.177472224642206,
+          "trades_per_day": 1.6
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.3705365477795386,
+          "trades_per_day": 1.9885714285714287
+        }
+      ]
+    },
+    {
+      "variant": "h1",
+      "market": "perp",
+      "val_score_day_pct": -0.13982270415858436,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.2011216876100133,
+          "trades_per_day": 4.087912087912088
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.34813826510162466,
+          "trades_per_day": 4.7032967032967035
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.150903319959182,
+          "trades_per_day": 3.425414364640884
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.12469901008773333,
+          "trades_per_day": 2.791208791208791
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.1801511874614212,
+          "trades_per_day": 2.9485714285714284
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.19422512965437402,
+          "trades_per_day": 2.4114285714285715
+        }
+      ]
+    },
+    {
+      "variant": "h1",
+      "market": "perp_maker",
+      "val_score_day_pct": -0.1581367347506101,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.012437874416314148,
+          "trades_per_day": 3.857142857142857
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.36420751372625304,
+          "trades_per_day": 3.10989010989011
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.42000550924976104,
+          "trades_per_day": 3.160220994475138
+        },
+        {
+          "year": 2024,
+          "val_day_pct": 0.02915974527694217,
+          "trades_per_day": 2.065934065934066
+        },
+        {
+          "year": 2025,
+          "val_day_pct": 0.0005394212176920155,
+          "trades_per_day": 2.08
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.20674442643859484,
+          "trades_per_day": 2.137142857142857
+        }
+      ]
+    },
+    {
+      "variant": "h1",
+      "market": "spot",
+      "val_score_day_pct": -0.1901343874996384,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": 0.27607045365029664,
+          "trades_per_day": 1.4065934065934067
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.19596286955149675,
+          "trades_per_day": 1.6043956043956045
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.3723058490323278,
+          "trades_per_day": 1.3259668508287292
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.11920968619310737,
+          "trades_per_day": 1.6043956043956045
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.2593485721599134,
+          "trades_per_day": 1.68
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.47004980171128175,
+          "trades_per_day": 1.8057142857142856
+        }
+      ]
+    },
+    {
+      "variant": "linear_m15",
+      "market": "perp_maker",
+      "val_score_day_pct": -0.37770003016478704,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.30477486497062145,
+          "trades_per_day": 6.5054945054945055
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.41685549556009655,
+          "trades_per_day": 6.362637362637362
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.4486238141305836,
+          "trades_per_day": 5.54696132596685
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -0.4906018078498138,
+          "trades_per_day": 5.362637362637362
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.29111612081732036,
+          "trades_per_day": 3.6342857142857143
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.3142280776602865,
+          "trades_per_day": 3.5314285714285716
+        }
+      ]
+    },
+    {
+      "variant": "linear_h1",
+      "market": "perp_maker",
+      "val_score_day_pct": -0.7131350960129706,
+      "folds": [
+        {
+          "year": 2021,
+          "val_day_pct": -0.5555321544986433,
+          "trades_per_day": 10.164835164835164
+        },
+        {
+          "year": 2022,
+          "val_day_pct": -0.7322003937936808,
+          "trades_per_day": 10.021978021978022
+        },
+        {
+          "year": 2023,
+          "val_day_pct": -0.7657176451681466,
+          "trades_per_day": 9.049723756906078
+        },
+        {
+          "year": 2024,
+          "val_day_pct": -1.0619299557617494,
+          "trades_per_day": 8.615384615384615
+        },
+        {
+          "year": 2025,
+          "val_day_pct": -0.3860245237563702,
+          "trades_per_day": 7.782857142857143
+        },
+        {
+          "year": 2026,
+          "val_day_pct": -0.7774059030992332,
+          "trades_per_day": 7.017142857142857
+        }
+      ]
+    }
+  ],
+  "selected": {
+    "variant": "linear_m15",
+    "market": "spot"
+  }
+}

@@ -132,6 +132,13 @@ ol.limits { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 7
   </section>
 
   <section>
+    <h2>Round 2: attacking the cost gap</h2>
+    <p class="note">Every arm below was scored on the six 183-day validation windows only, and the winner was frozen before any of its test years were looked at. "Limit" arms rest an order at the bar's open that fills only if price trades 5 bp through it, paying maker fees (0.02% perp, 0.10% spot), with forced session exits as market orders. "Linear" arms trade a ridge forecast only when it clears the fee. "Season" picks one fixed window of UTC hours from the training data.</p>
+    <div class="panel scroll"><table id="round2"></table></div>
+    <p class="note" id="round2-note"></p>
+  </section>
+
+  <section>
     <h2>Is there anything to learn?</h2>
     <p class="note">A first-principles ceiling check. If a plain linear forecast of the next bar can't rank returns out of sample, a reinforcement learner on the same inputs has little to find either. Rank IC is the Spearman correlation between the forecast and the realized 15-minute return.</p>
     <div class="two">
@@ -285,7 +292,7 @@ function render() {
     ['Activity', ppo.trades_per_day.toFixed(2) + ' trades/day', `${ppo.exposure_pct.toFixed(0)}% of bars in a position · ${ppo.days} test days`, null, null],
   ].map(([t, v, s, cl, pl]) => `<div class="stat"><span class="eyebrow">${t}</span><span class="v">${v}</span><span class="s">${s}</span>${pl ? `<span><span class="pill ${cl}">${pl}</span></span>` : ''}</div>`).join('');
   document.getElementById('verdict-text').textContent = verdictFor(MK);
-  renderCapacity();
+  renderCapacity(); renderRound2();
   const a = R().data_audit;
   document.getElementById('rules').innerHTML =
     `Bitstamp BTC/USD 1-minute candles (${a.first_minute_utc.slice(0, 10)} to ${a.last_minute_utc.slice(0, 10)}) resampled to 15-minute bars; ${a.sessions_usable.toLocaleString()} complete UTC days kept, ${a.days_excluded} excluded for gaps or outages. ` +
@@ -448,6 +455,16 @@ function renderCapacity() {
     rows.push(`<tr class="${nn === NN && mk === MK ? 'hl' : ''}"><td>${mk === 'spot' ? 'Spot' : 'Perp'} · ${nn === 'mlp' ? 'compact' : 'deep'}</td><td class="n">${(Object.values(M.training)[0][0].summary.total_params).toLocaleString()}</td><td class="n">${f(val.reduce((a, b) => a + b, 0) / val.length)}</td><td class="n ${c[0] > 0 ? 'good' : c[1] < 0 ? 'bad' : ''}">${f(p.mean_day_pct)}</td><td class="n">${f(c[0])} … ${f(c[1])}</td><td class="n">${f(p.vs_intraday_bh_mean_pct)}</td><td class="n">${f(cb[0])} … ${f(cb[1])}</td><td class="n">${p.trades_per_day.toFixed(2)}</td><td class="n">${p.exposure_pct.toFixed(0)}%</td></tr>`);
   }
   document.getElementById('capacity').innerHTML = `<tr><th>Market · network</th><th>Params</th><th>Picked val %/day</th><th>Test %/day</th><th>95% CI</th><th>vs intraday B&amp;H</th><th>95% CI</th><th>Trades/day</th><th>In market</th></tr>` + rows.join('');
+}
+
+function renderRound2() {
+  const S = D.models._selection; if (!S) return;
+  const lab = {mlp: 'PPO compact · 15 min', h1: 'PPO compact · 1 hour', m15_maker: 'PPO compact · 15 min', linear_m15: 'Linear forecast · 15 min', linear_h1: 'Linear forecast · 1 hour', season_h1: 'Hour-of-day window'};
+  const mk = m => ({spot: 'Spot, market orders', perp: 'Perp, market orders', spot_maker: 'Spot, limit orders', perp_maker: 'Perp, limit orders'}[m]);
+  const lim = Math.max(...S.ranking.flatMap(r => r.folds.map(f => Math.abs(f.val_day_pct))));
+  document.getElementById('round2').innerHTML = `<tr><th>Arm</th><th>Execution</th><th>Mean val %/day</th>${S.ranking[0].folds.map(f => `<th>${f.year} fold</th>`).join('')}<th>Trades/day</th></tr>` +
+    S.ranking.map((r, i) => `<tr class="${i === 0 ? 'hl' : ''}"><td>${lab[r.variant] || r.variant}</td><td>${mk(r.market)}</td><td class="n">${f(r.val_score_day_pct)}</td>${r.folds.map(x => `<td class="n" style="background:${heatColor(x.val_day_pct, lim)}">${f(x.val_day_pct)}</td>`).join('')}<td class="n">${(r.folds.reduce((a, x) => a + (x.trades_per_day || 0), 0) / r.folds.length).toFixed(2)}</td></tr>`).join('');
+  document.getElementById('round2-note').textContent = `Selected by the frozen rule: ${lab[S.selected.variant]} on ${mk(S.selected.market).toLowerCase()}. It never finds a forecast that clears the fee, so it never trades and its test result is exactly zero. No arm that actually trades has a positive validation average.`;
 }
 
 function setNet(n) { if (!D.models[n]) return; NN = n; ['mlp', 'deep'].forEach(k => document.getElementById('nn-' + k).setAttribute('aria-pressed', k === n)); FOLD = null; render() }

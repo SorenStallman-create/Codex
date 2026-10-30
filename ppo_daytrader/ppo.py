@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from env import BARS, MARKETS, bar_returns, step_reward, state_features, run_policy
+from env import MARKETS, bar_returns, hl_returns, step, state_features, run_policy
 from data import FEATURES, STATE, CONTEXT, SEQ_CHANNELS, SEQ_LEN
 
 INPUTS = FEATURES + STATE
@@ -95,7 +95,7 @@ def train(market_name, sess, train_days, val_days, seed, cfg=PPOConfig(), log=pr
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr, eps=1e-5)
     posmap = np.array(market.positions, np.float64)
     history, best = [], (-np.inf, None, -1)
-    N, T = cfg.n_envs, BARS
+    N, T = cfg.n_envs, sess['open'].shape[1]
     t0 = time.time()
     for upd in range(cfg.updates):
         for g in opt.param_groups:
@@ -103,18 +103,19 @@ def train(market_name, sess, train_days, val_days, seed, cfg=PPOConfig(), log=pr
         days = rng.choice(train_days, N, replace=True)
         o, c, x = sess['open'][days], sess['close'][days], np.asarray(sess['obs'][days])
         gap, bar = bar_returns(o, c)
+        lo, hi = hl_returns(sess, days)
         obs_buf = np.zeros((T, N, n_in), np.float32); act_buf = np.zeros((T, N), np.int64)
         logp_buf = np.zeros((T, N), np.float32); val_buf = np.zeros((T, N), np.float32)
         rew_buf = np.zeros((T, N), np.float32)
         pos = np.zeros(N); unreal = np.zeros(N)
         with torch.no_grad():
             for j in range(T):
-                obs = np.concatenate([x[:, j], state_features(pos, j, unreal)], 1)
+                obs = np.concatenate([x[:, j], state_features(pos, j, unreal, T)], 1)
                 logits, v = model(torch.as_tensor(obs))
                 dist = torch.distributions.Categorical(logits=logits)
                 a = dist.sample()
-                new = posmap[a.numpy()]
-                rew_buf[j] = cfg.reward_scale * step_reward(market, pos, new, gap[:, j], bar[:, j], j)
+                new, g = step(market, pos, posmap[a.numpy()], gap[:, j], bar[:, j], lo[:, j], hi[:, j], j, T)
+                rew_buf[j] = cfg.reward_scale * g
                 unreal = np.where(new == pos, unreal + np.log1p(pos * gap[:, j]) + np.log1p(new * bar[:, j]),
                                   np.log1p(new * bar[:, j]))
                 unreal = np.where(new == 0, 0.0, unreal)

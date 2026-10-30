@@ -30,7 +30,20 @@ MODELS = OUT / 'models'
 VARIANTS = {
     'mlp': {'models': OUT / 'models', 'loader': load_sessions, 'arch': 'mlp', 'seeds': [11, 22, 33], 'updates': 400},
     'deep': {'models': OUT / 'models_deep', 'loader': load_sessions_v2, 'arch': 'deep', 'seeds': [11, 22], 'updates': 150, 'epochs': 3},
+    # Round 2 (2026-10-30, after the compact results): attack the edge-vs-cost gap.
+    # Hourly decisions and/or resting limit orders. The winner is chosen by validation score
+    # only (choose_arm.py) and frozen in artifacts/selection.json before its test years are scored.
+    'h1': {'models': OUT / 'models_h1', 'loader': load_sessions, 'arch': 'mlp', 'seeds': [11, 22, 33], 'updates': 400,
+           'cadence': 4, 'markets': ['spot', 'perp', 'spot_maker', 'perp_maker']},
+    'm15_maker': {'models': OUT / 'models_m15_maker', 'loader': load_sessions, 'arch': 'mlp', 'seeds': [11, 22, 33],
+                  'updates': 400, 'markets': ['spot_maker', 'perp_maker']},
 }
+
+
+def sessions_for(variant):
+    from env import resample
+    V = VARIANTS[variant]
+    return resample(V['loader'](), V.get('cadence', 1))
 
 
 def folds(days):
@@ -51,7 +64,7 @@ def job(args):
     import torch
     from ppo import train, summary, PPOConfig
     V = VARIANTS[variant]; MODELS = V['models']
-    sess = V['loader'](); f = {x['year']: x for x in folds(sess['days'])}[year]
+    sess = sessions_for(variant); f = {x['year']: x for x in folds(sess['days'])}[year]
     path = MODELS / f'{market}_{year}_s{seed}.pt'
     logf = open(MODELS / f'{market}_{year}_s{seed}.log', 'w')
     log = lambda s: (logf.write(s + '\n'), logf.flush())
@@ -71,7 +84,7 @@ def train_all(workers, only=None, variant='mlp'):
     V = VARIANTS[variant]; MODELS = V['models']
     MODELS.mkdir(parents=True, exist_ok=True)
     (OUT / 'protocol.json').write_text(json.dumps({**PROTOCOL, 'variants': {k: {kk: str(vv) for kk, vv in v.items() if kk != 'loader'} for k, v in VARIANTS.items()}}, indent=2))
-    jobs = [(m, y, s, variant) for m in PROTOCOL['markets'] for y in PROTOCOL['test_years'] for s in V['seeds']
+    jobs = [(m, y, s, variant) for m in V.get('markets', PROTOCOL['markets']) for y in PROTOCOL['test_years'] for s in V['seeds']
             if not (MODELS / f'{m}_{y}_s{s}.pt').exists() and (only is None or m == only)]
     print(f'{len(jobs)} jobs', flush=True)
     with ProcessPoolExecutor(workers) as ex:

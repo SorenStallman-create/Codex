@@ -7,9 +7,9 @@ import numpy as np
 import torch
 
 from data import OUT, FEATURES, CONTEXT, SEQ_CHANNELS, SEQ_LEN, STATE, load_sessions
-from env import BARS, MARKETS, bar_returns, run_policy
+from env import MARKETS, bar_returns, run_policy, resample
 from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, policy_fn
-from walkforward import PROTOCOL, VARIANTS, folds
+from walkforward import PROTOCOL, VARIANTS, folds, sessions_for
 
 VARIANT, MODELS, SEEDS = 'mlp', VARIANTS['mlp']['models'], VARIANTS['mlp']['seeds']
 F = {n: i for i, n in enumerate(INPUTS)}
@@ -88,7 +88,8 @@ def linear_rule(market, pred):
         p = pred(obs.astype(np.float64))
         cur = pos_to_action(market, obs[:, F['position']])
         # trade only when the forecast clears one side of the cost; otherwise keep the position
-        return np.where(p > market.cost, hi, np.where(p < -market.cost, lo, cur))
+        fee = market.cost if market.maker_fee is None else market.maker_fee
+        return np.where(p > fee, hi, np.where(p < -fee, lo, cur))
     return act
 
 
@@ -246,9 +247,9 @@ def inspect(market, year, models, sess, days, played):  # noqa: C901
 
 def main(variant='mlp'):
     set_variant(variant)
-    sess = VARIANTS[variant]['loader'](); fl = folds(sess['days'])
+    sess = sessions_for(variant); fl = folds(sess['days'])
     out = {'protocol': PROTOCOL, 'variant': variant, 'inputs': list(groups()), 'markets': {}}
-    for mk in PROTOCOL['markets']:
+    for mk in VARIANTS[variant].get('markets', PROTOCOL['markets']):
         market = MARKETS[mk]
         res = {'cost_per_side': market.cost, 'funding_per_8h': market.funding, 'positions': market.positions,
                'years': {}, 'training': {}, 'pooled': {}}
@@ -261,7 +262,7 @@ def main(variant='mlp'):
             ens = run_policy(market, sess, days, policy_fn(models), keep_obs=True)
             bh = run_policy(market, sess, days, const(market, 1))['daily_ret']
             pred = fit_linear(sess, np.concatenate([f['train'], f['val']]))
-            sw = max(ens['turnover'].mean() / BARS / 2, 1e-4)
+            sw = max(ens['turnover'].mean() / ens['held'].shape[1] / 2, 1e-4)
             strategies = {
                 'ppo_ensemble': ens,
                 **{f'ppo_seed{s}': run_policy(market, sess, days, policy_fn([m])) for s, m in zip(SEEDS, models)},

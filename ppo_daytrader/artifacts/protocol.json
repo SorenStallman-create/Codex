@@ -35,6 +35,21 @@
       "seeds": "[11, 22]",
       "updates": "150",
       "epochs": "3"
+    },
+    "h1": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models_h1",
+      "arch": "mlp",
+      "seeds": "[11, 22, 33]",
+      "updates": "400",
+      "cadence": "4",
+      "markets": "['spot', 'perp', 'spot_maker', 'perp_maker']"
+    },
+    "m15_maker": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models_m15_maker",
+      "arch": "mlp",
+      "seeds": "[11, 22, 33]",
+      "updates": "400",
+      "markets": "['spot_maker', 'perp_maker']"
     }
   }
 }

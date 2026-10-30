@@ -27,6 +27,8 @@ def main():
     models = {'mlp': slim(json.loads((OUT / 'results.json').read_text()))}
     if (OUT / 'results_deep.json').exists():
         models['deep'] = slim(json.loads((OUT / 'results_deep.json').read_text()))
+    if (OUT / 'selection.json').exists():
+        models['_selection'] = json.loads((OUT / 'selection.json').read_text())
     narrative = json.loads((ROOT / 'narrative.json').read_text()) if (ROOT / 'narrative.json').exists() else {}
     tpl = (ROOT / 'report_template.html').read_text()
     html = tpl.replace('/*__DATA__*/null', json.dumps({'models': models, **narrative}, separators=(',', ':')))

@@ -139,9 +139,11 @@ def build(src):
     idx = np.array(idx)
     rows = idx[:, None] + np.arange(BARS_PER_DAY)[None, :]
     o = bars.open.values[rows]; c = bars.close.values[rows]
+    h = bars.high.values[rows]; lo = bars.low.values[rows]
     obs = f.values[rows - 1]  # decision for bar j sees features at close of bar j-1
     np.savez_compressed(OUT / 'sessions.npz', days=np.array([str(d.date()) for d in keep]),
                         open=o.astype(np.float64), close=c.astype(np.float64),
+                        high=h.astype(np.float64), low=lo.astype(np.float64),
                         obs=obs.astype(np.float32), features=np.array(FEATURES))
     audit = {
         'source': 'github.com/ff137/bitstamp-btcusd-minute-data (Bitstamp BTC/USD 1m)',
