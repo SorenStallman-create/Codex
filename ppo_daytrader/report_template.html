@@ -401,7 +401,7 @@ function renderNet() {
     const col = pl > ps ? `color-mix(in srgb, ${css('--long')} ${Math.round(pl * 100)}%, ${css('--flat')})` : `color-mix(in srgb, ${css('--short')} ${Math.round(ps * 100)}%, ${css('--flat')})`;
     g += `<circle cx="${10 + (pw - 20) * (p[0] - x0) / (x1 - x0)}" cy="${10 + (ph - 20) * (1 - (p[1] - y0) / (y1 - y0))}" r="2.4" fill="${col}" opacity=".7"/>` });
   document.getElementById('pca').innerHTML = SVG(pw, ph, g);
-  document.getElementById('pca-note').textContent = `1,500 test-year states projected onto the first two principal components of hidden layer 2 (${(pc.explained[0] * 100).toFixed(0)}% and ${(pc.explained[1] * 100).toFixed(0)}% of variance). Green = the policy prefers long${M.positions.includes(-1) ? ', red = prefers short' : ''}, grey = prefers flat. Clean separation means the layer has organized states by decision. Dead units: ${I.dead_units_pct.toFixed(0)}%; saturated activations: ${I.saturated_pct.toFixed(0)}%.`;
+  document.getElementById('pca-note').textContent = `1,500 test-year states projected onto the first two principal components of hidden layer 2 (${(pc.explained[0] * 100).toFixed(0)}% and ${(pc.explained[1] * 100).toFixed(0)}% of variance). Green = the policy prefers long${M.positions.includes(-1) ? ', red = prefers short' : ''}, grey = prefers flat. Clean separation means the layer has organized states by decision. Dead units: ${I.dead_units_pct.toFixed(0)}%${I.saturated_pct == null ? '' : `; saturated activations: ${I.saturated_pct.toFixed(0)}%`}.`;
   // surface
   const S = I.surface, n = S.grid.length, cs = 18; g = '';
   for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const p = S.probs[i * n + j], v = p[li] - (M.positions.includes(-1) ? p[0] : p[M.positions.indexOf(0)]);

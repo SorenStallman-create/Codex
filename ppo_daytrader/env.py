@@ -20,6 +20,7 @@ class Market:
     funding: float = 0.0   # per 8h stamp held, fraction of notional (charged regardless of sign)
     maker_fee: float = None  # set -> entries/exits are resting limit orders at the bar open
     through: float = 0.0005  # a limit fills only if price trades this far through it during the bar
+    funding_each_step: bool = False  # swing bars: charge `funding` on every step held instead of at 08/16 UTC
 
     @property
     def flat_action(self):
@@ -33,7 +34,11 @@ PERP = Market('perp', (-1, 0, 1), cost=0.0006, funding=0.0001)  # ~0.05% taker +
 # exits stay taker orders.
 SPOT_MAKER = Market('spot_maker', (0, 1), cost=0.0020, maker_fee=0.0010)
 PERP_MAKER = Market('perp_maker', (-1, 0, 1), cost=0.0006, funding=0.0001, maker_fee=0.0002)
-MARKETS = {'spot': SPOT, 'perp': PERP, 'spot_maker': SPOT_MAKER, 'perp_maker': PERP_MAKER}
+# Swing: 4-hour steps, so 0.01% per 8h of funding is 0.005% per step held.
+SPOT_SWING = Market('spot_swing', (0, 1), cost=0.0020)
+PERP_SWING = Market('perp_swing', (-1, 0, 1), cost=0.0006, funding=0.00005, funding_each_step=True)
+MARKETS = {'spot': SPOT, 'perp': PERP, 'spot_maker': SPOT_MAKER, 'perp_maker': PERP_MAKER,
+           'spot_swing': SPOT_SWING, 'perp_swing': PERP_SWING}
 FUNDING_BARS = (32, 64)  # bars that start at 08:00 and 16:00 UTC (15-minute sessions)
 
 
@@ -71,7 +76,7 @@ def step(market, prev_pos, target, gap, bar, lo, hi, j, n):
     g = np.log1p(prev_pos * gap)
     g = g + np.log1p(-fee * np.abs(pos - prev_pos))
     g = g + np.log1p(pos * bar)
-    if market.funding and j in (FUNDING_BARS if n == BARS else funding_bars(n)):
+    if market.funding and (market.funding_each_step or j in (FUNDING_BARS if n == BARS else funding_bars(n))):
         g = g + np.log1p(-market.funding * np.abs(pos))
     if j == n - 1:  # forced liquidation at the session close, always a taker order
         g = g + np.log1p(-market.cost * np.abs(pos))

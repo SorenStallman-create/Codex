@@ -232,3 +232,34 @@ def load_sessions_v2():
     s = load_sessions()
     s['obs'] = np.load(OUT / 'sessions_v2_obs.npy', mmap_mode='r')
     return s
+
+
+# ---------- swing variant: 4-hour decisions, positions may last for weeks ----------
+SWING_BAR_H = 4
+SWING_CHUNK_DAYS = 30
+
+
+def build_swing(src):
+    """Continuous 4-hour bars cut into 30-day 'sessions' so the same env and PPO code apply.
+    Training uses chunks starting every 5 days; evaluation uses back-to-back chunks.
+    The forced exit at each chunk end adds one round trip per 30 days."""
+    df, outages, _ = load_minutes(src)
+    m = df.copy(); m['ts'] = pd.to_datetime(m.timestamp, unit='s', utc=True)
+    bars = m.set_index('ts').resample(f'{SWING_BAR_H}h').agg(
+        open=('open', 'first'), high=('high', 'max'), low=('low', 'min'), close=('close', 'last'),
+        volume=('volume', 'sum')).ffill()
+    bars['day'] = bars.index.floor('D')
+    f = features(bars).values
+    per = 24 // SWING_BAR_H; T = SWING_CHUNK_DAYS * per
+    starts = np.arange(per * 90, len(bars) - T, per * 5)  # skip a 90-day warm-up
+    rows = starts[:, None] + np.arange(T)[None, :]
+    np.savez_compressed(OUT / 'sessions_swing.npz', days=np.array([str(bars.index[s].date()) for s in starts]),
+                        open=bars.open.values[rows], close=bars.close.values[rows],
+                        high=bars.high.values[rows], low=bars.low.values[rows],
+                        obs=f[rows - 1].astype(np.float32), features=np.array(FEATURES))
+    print('swing chunks', rows.shape)
+
+
+def load_sessions_swing():
+    z = np.load(OUT / 'sessions_swing.npz', allow_pickle=False)
+    return {k: z[k] for k in z.files}
