@@ -14,6 +14,9 @@ Baselines count too, since a good-looking baseline would also have been reported
 | 4c | Ad-hoc crowding/basis fade rules on the new data (2 rules × 2 markets × 2 fees), run before this ledger existed | 8 |
 | **Total before round 5** | | **160** |
 | 5 | Ext PPO at real + zero fee (4 markets) with 11 baselines each (pre-registered) | 48 |
+| 6 | Edge map: 5 horizons × 6 cut-offs selected on validation, 2 markets scored once (pre-registered); 200 placebos each not counted | 2 |
+| 6x | Exploratory per-year look at 4h top 10% and 24h top 5% after the test data was seen | 2 |
+| 6s | Selection candidates evaluated on validation (5 horizons × 6 cut-offs × 2 markets) | 60 |
 
 Of these, the trials that showed a 95% interval above zero at real fees:
 the round-1 perp linear forecast (+0.031%/day, barely) and nothing else. With 160+ trials,

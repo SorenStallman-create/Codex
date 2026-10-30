@@ -210,6 +210,45 @@ Fear & Greed) are the only new information with a consistent sign. Their effect 
 the rest of the day, not the next 15 minutes. The only way to test them honestly is with
 fewer, longer holds and a forward paper log, because the hourly mirror ends in March 2026.
 
+## Round 6: where is the edge, and at what horizon? (pre-registered)
+
+Question from Soren: find an edge and the best points to predict. Protocol in `prereg/ROUND6_PREREG.md`,
+hash-locked before any code ran. `edge_map.py` trains a LightGBM forecaster walk-forward on all 68 inputs
+(hourly decisions, enter at the next open), for 1h, 4h, 12h, 24h and 72h horizons. Each year it picks the
+horizon and confidence cut-off on validation data, then trades the test year once. Page: `artifacts/edge_map.html`.
+
+**Pre-registered result: fail.**
+
+| Market | Mean/day | 95% range | Trades | Placebo rank | Years positive |
+|---|---|---|---|---|---|
+| Spot (20 bp/side, long only) | −0.055% | −0.142 … +0.030 | 374 | 61.5% | 3 of 6 |
+| Perp (6 bp/side + funding) | −0.020% | −0.112 … +0.073 | 1218 | 81% | 3 of 6 |
+
+Spot before tax by year: 2021 +42%, 2022 −70%, 2023 +4%, 2024 +4%, 2025 −19%, 2026 −47%.
+Validation kept choosing the 72h horizon with half of all signals, which is close to "be long while it rises".
+
+**Edge map (pooled out-of-sample, descriptive):** gross bp per trade on the top x% most confident predictions.
+
+| Horizon | All | Top 20% | Top 10% | Top 5% | Top 1% |
+|---|---|---|---|---|---|
+| 1h | 1.4 | 3.2 | 2.8 | 1.7 | 5.7 |
+| 4h | 3.7 | 11.0 | 14.0 | 13.4 | 18.7 |
+| 12h | 7.6 | 13.9 | 14.6 | 8.9 | 27.5 |
+| 24h | 7.8 | 22.1 | 37.0 | 41.6 | 54.5 |
+| 72h | 18.4 | 48.0 | 53.5 | 57.2 | 87.3 |
+
+Round-trip costs: perp 12 bp, spot 40 bp. Long horizons include BTC's drift. The high-volatility third
+roughly doubles the 24h edge (60 bp vs 24–26 bp). Hour of day is noise (13–63 bp across hours).
+
+**Exploratory, looked at after seeing test data (a lead, not evidence):** per-year edge vs drift
+(`artifacts/edge_by_year_exploratory.json`).
+- 4h, top 10%: +21, +4, +21, +22, +14, −8 bp (2021–2026), ahead of drift in 5 of 6 years.
+- 24h, top 5%: −33, +35, +93, +49, +76, +16 bp; about 90% longs and clustered on the same days.
+
+**Verdict:** the best prediction points are 4–24 hour holds, the top 5–10% most confident signals, and
+volatile markets. Nothing passes the locked test. The next honest step is to freeze one rule and log it
+forward on paper; that needs a live BTC feed, which this environment's network policy blocks.
+
 ## What would change the verdict
 
 - Lower real costs: maker rebates or VIP fee tiers, which only matter with fill-rate data.

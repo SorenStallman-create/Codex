@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BTC edge map</title>
+<style>
+:root {
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --q1: #b9d3f4; --q2: #6fa5e8; --q3: #1c5cab;
+  --drift: #a8a79f; --bad: #d03b3b; --good: #006300;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --q1: #184f95; --q2: #3987e5; --q3: #9cc3f2;
+    --drift: #5f5e59; --bad: #e66767; --good: #0ca30c;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --q1: #184f95; --q2: #3987e5; --q3: #9cc3f2;
+  --drift: #5f5e59; --bad: #e66767; --good: #0ca30c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 17px; margin: 0 0 4px; }
+p { margin: 0 0 10px; }
+.sub { color: var(--ink2); margin-bottom: 22px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px; margin-bottom: 18px; min-width: 0; }
+.note { color: var(--ink2); font-size: 13.5px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0 4px; }
+.tile { border: 1px solid var(--ring); border-radius: 10px; padding: 12px; }
+.tile .k { color: var(--ink2); font-size: 13px; }
+.tile .v { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .d { font-size: 13px; color: var(--ink2); }
+.badge { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--bad); }
+.answer { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.answer li { padding-left: 18px; position: relative; }
+.answer li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--s1); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink2); margin: 8px 0 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.sw.line { height: 3px; border-radius: 2px; width: 16px; }
+.sw.dash { height: 0; width: 16px; border-top: 2px dashed var(--muted); border-radius: 0; }
+.chart { position: relative; width: 100%; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+svg .lbl { fill: var(--ink2); font-size: 11.5px; }
+svg .ttl { fill: var(--ink2); font-size: 12.5px; font-weight: 600; }
+.wide { overflow-x: auto; overflow-y: hidden; }
+.wide svg { min-width: 640px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45;
+  white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 5; }
+.tip b { font-weight: 600; }
+.tip .row { display: flex; align-items: center; gap: 6px; }
+.tip .row .n { margin-left: auto; padding-left: 12px; font-variant-numeric: tabular-nums; }
+.multi { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+details { margin-top: 6px; }
+summary { cursor: pointer; color: var(--ink2); font-size: 13.5px; }
+table { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin-top: 10px; width: 100%; }
+th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink2); font-weight: 600; }
+.tablewrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>BTC edge map</h1>
+<p class="sub">Round 6 of Mosaic Flash. A LightGBM forecaster trained walk-forward on 68 inputs (price, volume, Mosaic indicators,
+funding, open interest, sentiment), scored on 2021 to Oct 2026 data it never trained on. Question: where, if anywhere, are its
+predictions strong enough to pay trading costs?</p>
+
+<section class="card">
+  <h2>The pre-registered test failed</h2>
+  <p class="note">Rules locked and hash-logged before any code ran. The model picked its horizon and confidence cut-off on validation data each year, then traded the test year once.</p>
+  <div class="tiles" id="tiles"></div>
+  <p class="note" style="margin-top:10px">The selection was unstable: validation kept choosing the 72-hour horizon with half of all signals, which is mostly "be long while BTC rises". It paid in 2021 and lost in 2022 and 2026.</p>
+</section>
+
+<section class="card">
+  <h2>Where the predictions are good enough</h2>
+  <p class="note" style="margin-bottom:6px">Average move captured per trade, before costs, when the model only acts on its most confident x% of predictions. Pooled over 2021 to 2026, never trained on. A line must sit above the dashed cost line to make money.</p>
+  <div class="legend" id="lg1"></div>
+  <div class="chart wide" id="c1"></div>
+  <p class="note">The 1-hour horizon never clears even perp costs. 4 hours clears perp costs from the top 20% up. 24 hours clears spot costs at the top 5% and above. Part of the 24h and 72h height is just BTC's upward drift, which the next chart separates out.</p>
+</section>
+
+<section class="card">
+  <h2>Does it hold year by year?</h2>
+  <p class="note">Exploratory: I looked at this after seeing the test data, so it is a lead, not proof. Bars are gross edge per trade; gray is what a random entry earned that year (drift).</p>
+  <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Model, gross bp per trade</span><span><i class="sw" style="background:var(--drift)"></i>Drift, average move</span></div>
+  <div class="multi"><div class="chart" id="c2a"></div><div class="chart" id="c2b"></div></div>
+  <p class="note">4 hours, top 10%: ahead of drift in 5 of 6 years by roughly 10 to 20 bp, but 2026 is negative. 24 hours, top 5%: large in 2022 to 2025 but about 90% of those trades are longs, signals come in clusters on the same days, and 2021 lost.</p>
+</section>
+
+<section class="card">
+  <h2>Volatility matters, the clock mostly doesn't</h2>
+  <p class="note">Gross bp (basis points, 1 bp = 0.01%) per trade on each horizon's top 10% most confident signals, split by how volatile the market was at the time.</p>
+  <div class="legend"><span><i class="sw" style="background:var(--q1)"></i>Calm third</span><span><i class="sw" style="background:var(--q2)"></i>Middle third</span><span><i class="sw" style="background:var(--q3)"></i>Volatile third</span></div>
+  <div class="chart wide" id="c3"></div>
+  <p class="note">Hour of day: the 24h top-10% edge ranges from 13 to 63 bp across the 24 UTC hours with no stable pattern, which is what noise looks like at roughly 200 trades per hour.</p>
+</section>
+
+<section class="card">
+  <h2>So, the optimal points for prediction</h2>
+  <ul class="answer">
+    <li><b>Horizon:</b> 4 to 24 hours. Fifteen-minute and one-hour forecasts are real (rank correlation about 0.05) but too small to beat fees.</li>
+    <li><b>Selectivity:</b> act on only the top 5 to 10% most confident predictions, roughly one or two trades a day, not dozens.</li>
+    <li><b>Conditions:</b> volatile markets. For 4 to 24 hour holds, the calm two thirds of the time carries roughly half the edge of the volatile third.</li>
+    <li><b>Not yet an edge:</b> nothing here passed the locked test. The next step is to freeze one rule (for example, a 24h hold on the top 5% of signals, spot, long only) and run it forward on paper.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Table view</h2>
+  <details><summary>Edge by confidence cut-off (gross bp per trade)</summary><div class="tablewrap" id="t1"></div></details>
+  <details><summary>Exploratory per-year breakdown</summary><div class="tablewrap" id="t2"></div></details>
+  <details><summary>Pre-registered result by year (spot, before and after tax)</summary><div class="tablewrap" id="t3"></div></details>
+</section>
+</main>
+
+<script>
+const D = /*DATA*/null;
+const H = ['1h', '4h', '12h', '24h', '72h'];
+const HN = {'1h': '1 hour', '4h': '4 hours', '12h': '12 hours', '24h': '24 hours', '72h': '72 hours'};
+const COL = {'1h': 'var(--s1)', '4h': 'var(--s2)', '12h': 'var(--s3)', '24h': 'var(--s4)', '72h': 'var(--s5)'};
+const NS = 'http://www.w3.org/2000/svg';
+const f1 = x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1);
+const f3 = x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(3);
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function tipFor(box) {
+  const t = document.createElement('div'); t.className = 'tip'; box.appendChild(t);
+  return {
+    show(html, x, y) {
+      t.innerHTML = html; t.style.opacity = 1;
+      const bw = box.clientWidth, tw = t.offsetWidth;
+      t.style.left = Math.max(0, Math.min(bw - tw, x + 14)) + 'px';
+      t.style.top = Math.max(0, y - t.offsetHeight - 10) + 'px';
+    },
+    hide() { t.style.opacity = 0; }
+  };
+}
+function niceTicks(lo, hi, n) {
+  const step0 = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+
+// tiles
+(function () {
+  const p = D.primary, box = document.getElementById('tiles');
+  const yrsPos = m => Object.values(p[m].by_year_pct_day).filter(v => v > 0).length;
+  const items = [
+    ['Spot, 0.20% fee per side', f3(p.spot.mean_day_pct) + '% a day', `95% range ${f3(p.spot.ci95[0])} to ${f3(p.spot.ci95[1])} · ${p.spot.trades} trades · ${yrsPos('spot')} of 6 years positive`],
+    ['Perp, 0.06% fee per side', f3(p.perp.mean_day_pct) + '% a day', `95% range ${f3(p.perp.ci95[0])} to ${f3(p.perp.ci95[1])} · ${p.perp.trades} trades · ${yrsPos('perp')} of 6 years positive`],
+    ['Against random entries', `beats ${Math.round(p.spot.placebo_percentile)}% / ${Math.round(p.perp.placebo_percentile)}%`, 'spot / perp; needed 95% to pass'],
+  ];
+  for (const [k, v, d] of items) {
+    const t = document.createElement('div'); t.className = 'tile';
+    t.innerHTML = `<div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div><div class="badge">✕ Fails 4 of 4 gates</div>`;
+    if (k.startsWith('Against')) t.querySelector('.badge').textContent = '✕ Indistinguishable from luck';
+    box.appendChild(t);
+  }
+})();
+
+// chart 1: coverage curves
+(function () {
+  const box = document.getElementById('c1'), tip = tipFor(box);
+  const lg = document.getElementById('lg1');
+  lg.innerHTML = H.map(h => `<span><i class="sw line" style="background:${COL[h]}"></i>${HN[h]}</span>`).join('') +
+    '<span><i class="sw dash"></i>Round-trip cost: perp 12 bp, spot 40 bp</span>';
+  const cov = D.horizons['1h'].curve.map(c => c.coverage);
+  const W = 900, Ht = 380, m = {l: 44, r: 78, t: 12, b: 40};
+  const svg = el('svg', {viewBox: `0 0 ${W} ${Ht}`, role: 'img', 'aria-label': 'Gross edge per trade by confidence cut-off and horizon'}, box);
+  const ymax = 100, x = i => m.l + i * (W - m.l - m.r) / (cov.length - 1), y = v => m.t + (1 - v / ymax) * (Ht - m.t - m.b);
+  for (const v of niceTicks(0, ymax, 5)) {
+    el('line', {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1}, svg);
+    el('text', {x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end'}, svg, v);
+  }
+  cov.forEach((c, i) => el('text', {x: x(i), y: Ht - m.b + 18, 'text-anchor': 'middle'}, svg, (c * 100) + '%'));
+  el('text', {x: (m.l + W - m.r) / 2, y: Ht - 4, 'text-anchor': 'middle'}, svg, 'Share of predictions acted on (most confident first) → more selective');
+  for (const [name, c] of [['perp cost', D.costs.perp], ['spot cost', D.costs.spot]]) {
+    el('line', {x1: m.l, x2: W - m.r, y1: y(c), y2: y(c), stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '5 4'}, svg);
+    el('text', {x: m.l + 4, y: y(c) - 5, class: 'lbl'}, svg, `${name} ${c} bp`);
+  }
+  const ends = [];
+  for (const h of H) {
+    const pts = D.horizons[h].curve.map((c, i) => [x(i), y(Math.max(-5, Math.min(ymax, c.gross_bp)))]);
+    el('path', {d: 'M' + pts.map(p => p.join(',')).join('L'), fill: 'none', stroke: COL[h], 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}, svg);
+    ends.push([h, pts[pts.length - 1][1]]);
+  }
+  ends.sort((a, b) => a[1] - b[1]);
+  for (let i = 1; i < ends.length; i++) if (ends[i][1] - ends[i - 1][1] < 13) ends[i][1] = ends[i - 1][1] + 13;
+  for (const [h, yy] of ends) el('text', {x: W - m.r + 8, y: yy + 4, class: 'lbl'}, svg, HN[h]);
+  const cross = el('line', {y1: m.t, y2: Ht - m.b, stroke: 'var(--axis)', 'stroke-width': 1, opacity: 0}, svg);
+  const dots = H.map(h => el('circle', {r: 4.5, fill: COL[h], stroke: 'var(--surface)', 'stroke-width': 2, opacity: 0}, svg));
+  const hit = el('rect', {x: m.l - 20, y: m.t, width: W - m.l - m.r + 40, height: Ht - m.t - m.b, fill: 'transparent'}, svg);
+  hit.addEventListener('pointermove', ev => {
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(cov.length - 1, Math.round((sx - m.l) / ((W - m.l - m.r) / (cov.length - 1)))));
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', 1);
+    H.forEach((h, k) => { const v = D.horizons[h].curve[i].gross_bp; dots[k].setAttribute('cx', x(i)); dots[k].setAttribute('cy', y(Math.min(ymax, v))); dots[k].setAttribute('opacity', 1); });
+    const rows = H.map(h => { const c = D.horizons[h].curve[i];
+      return `<div class="row"><i class="sw" style="background:${COL[h]}"></i>${HN[h]}<span class="n">${f1(c.gross_bp)} bp · ${c.hit_pct.toFixed(0)}% right</span></div>`; }).join('');
+    tip.show(`<b>Top ${cov[i] * 100}% of predictions</b>${rows}`, x(i) * r.width / W, ev.clientY - box.getBoundingClientRect().top);
+  });
+  hit.addEventListener('pointerleave', () => { tip.hide(); cross.setAttribute('opacity', 0); dots.forEach(d => d.setAttribute('opacity', 0)); });
+})();
+
+// chart 2: per-year bars, edge vs drift
+function yearBars(id, key, title) {
+  const box = document.getElementById(id), tip = tipFor(box), rows = D.by_year[key];
+  const W = 440, Ht = 260, m = {l: 40, r: 8, t: 26, b: 28};
+  const svg = el('svg', {viewBox: `0 0 ${W} ${Ht}`, role: 'img', 'aria-label': title}, box);
+  el('text', {x: 0, y: 14, class: 'ttl'}, svg, title);
+  const vals = rows.flatMap(r => [r.edge_bp, r.drift_bp]);
+  const lo = Math.min(-10, ...vals) * 1.35, hi = Math.max(...vals) * 1.1;
+  const y = v => m.t + (hi - v) / (hi - lo) * (Ht - m.t - m.b);
+  for (const v of niceTicks(lo, hi, 4)) {
+    el('line', {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: 'var(--grid)', 'stroke-width': 1}, svg);
+    el('text', {x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end'}, svg, v);
+  }
+  const gw = (W - m.l - m.r) / rows.length, bw = Math.min(18, gw / 2 - 4);
+  const bar = (cx, v, fill) => {
+    const y0 = y(0), y1 = y(v), h = Math.max(1, Math.abs(y1 - y0)), r = Math.min(4, h / 2);
+    const top = Math.min(y0, y1), x0 = cx - bw / 2;
+    const d = v >= 0
+      ? `M${x0},${y0}V${top + r}Q${x0},${top} ${x0 + r},${top}H${x0 + bw - r}Q${x0 + bw},${top} ${x0 + bw},${top + r}V${y0}Z`
+      : `M${x0},${y0}V${top + h - r}Q${x0},${top + h} ${x0 + r},${top + h}H${x0 + bw - r}Q${x0 + bw},${top + h} ${x0 + bw},${top + h - r}V${y0}Z`;
+    el('path', {d, fill}, svg);
+  };
+  rows.forEach((r, i) => {
+    const cx = m.l + gw * (i + 0.5);
+    bar(cx - bw / 2 - 1, r.edge_bp, 'var(--s1)');
+    bar(cx + bw / 2 + 1, r.drift_bp, 'var(--drift)');
+    el('text', {x: cx, y: Ht - m.b + 16, 'text-anchor': 'middle'}, svg, r.year);
+    el('text', {x: cx - bw / 2 - 1, y: r.edge_bp >= 0 ? y(r.edge_bp) - 4 : y(r.edge_bp) + 12, 'text-anchor': 'middle', class: 'lbl'}, svg, Math.round(r.edge_bp));
+    const hit = el('rect', {x: cx - gw / 2, y: m.t, width: gw, height: Ht - m.t - m.b, fill: 'transparent'}, svg);
+    hit.addEventListener('pointermove', ev => {
+      const b = box.getBoundingClientRect();
+      tip.show(`<b>${r.year}</b><div class="row"><i class="sw" style="background:var(--s1)"></i>Model<span class="n">${f1(r.edge_bp)} bp</span></div>` +
+        `<div class="row"><i class="sw" style="background:var(--drift)"></i>Drift<span class="n">${f1(r.drift_bp)} bp</span></div>` +
+        `<div class="row">Trades<span class="n">${r.n} · ${r.long_pct}% long</span></div>`, ev.clientX - b.left, ev.clientY - b.top);
+    });
+    hit.addEventListener('pointerleave', () => tip.hide());
+  });
+  el('line', {x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), stroke: 'var(--axis)', 'stroke-width': 1}, svg);
+}
+yearBars('c2a', '4h', '4-hour hold, top 10% of signals');
+yearBars('c2b', '24h', '24-hour hold, top 5% of signals');
+
+// chart 3: volatility terciles
+(function () {
+  const box = document.getElementById('c3'), tip = tipFor(box);
+  const W = 900, Ht = 260, m = {l: 44, r: 8, t: 12, b: 28}, q = ['var(--q1)', 'var(--q2)', 'var(--q3)'], qn = ['Calm', 'Middle', 'Volatile'];
+  const svg = el('svg', {viewBox: `0 0 ${W} ${Ht}`, role: 'img', 'aria-label': 'Edge by volatility tercile'}, box);
+  const hi = Math.max(...H.flatMap(h => D.horizons[h].vol)) * 1.15, y = v => m.t + (1 - v / hi) * (Ht - m.t - m.b);
+  for (const v of niceTicks(0, hi, 4)) {
+    el('line', {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1}, svg);
+    el('text', {x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end'}, svg, v);
+  }
+  const gw = (W - m.l - m.r) / H.length, bw = Math.min(34, gw / 3 - 6);
+  H.forEach((h, i) => {
+    const cx = m.l + gw * (i + 0.5);
+    D.horizons[h].vol.forEach((v, k) => {
+      const x0 = cx + (k - 1.5) * (bw + 2), y1 = y(Math.max(0, v)), hgt = y(0) - y1, r = Math.min(4, hgt / 2);
+      el('path', {d: `M${x0},${y(0)}V${y1 + r}Q${x0},${y1} ${x0 + r},${y1}H${x0 + bw - r}Q${x0 + bw},${y1} ${x0 + bw},${y1 + r}V${y(0)}Z`, fill: q[k]}, svg);
+      el('text', {x: x0 + bw / 2, y: y1 - 4, 'text-anchor': 'middle', class: 'lbl'}, svg, Math.round(v));
+    });
+    el('text', {x: cx, y: Ht - m.b + 16, 'text-anchor': 'middle'}, svg, HN[h]);
+    const hit = el('rect', {x: cx - gw / 2, y: m.t, width: gw, height: Ht - m.t - m.b, fill: 'transparent'}, svg);
+    hit.addEventListener('pointermove', ev => {
+      const b = box.getBoundingClientRect();
+      tip.show(`<b>${HN[h]}, top 10%</b>` + D.horizons[h].vol.map((v, k) => `<div class="row"><i class="sw" style="background:${q[k]}"></i>${qn[k]}<span class="n">${f1(v)} bp</span></div>`).join(''), ev.clientX - b.left, ev.clientY - b.top);
+    });
+    hit.addEventListener('pointerleave', () => tip.hide());
+  });
+})();
+
+// tables
+(function () {
+  const cov = D.horizons['1h'].curve.map(c => c.coverage);
+  document.getElementById('t1').innerHTML = '<table><tr><th>Horizon</th>' + cov.map(c => `<th>top ${c * 100}%</th>`).join('') + '</tr>' +
+    H.map(h => `<tr><td>${HN[h]}</td>` + D.horizons[h].curve.map(c => `<td>${c.gross_bp.toFixed(1)}</td>`).join('') + '</tr>').join('') + '</table>';
+  document.getElementById('t2').innerHTML = '<table><tr><th>Rule</th><th>Year</th><th>Trades</th><th>% long</th><th>Model bp</th><th>Drift bp</th></tr>' +
+    [['4h', '4h, top 10%'], ['24h', '24h, top 5%']].flatMap(([k, n]) => D.by_year[k].map(r =>
+      `<tr><td>${n}</td><td>${r.year}</td><td>${r.n}</td><td>${r.long_pct}</td><td>${r.edge_bp.toFixed(1)}</td><td>${r.drift_bp.toFixed(1)}</td></tr>`)).join('') + '</table>';
+  const yt = D.primary.spot.yearly_tax;
+  document.getElementById('t3').innerHTML = '<table><tr><th>Year</th><th>Before tax</th><th>After tax (29.75%)</th></tr>' +
+    Object.keys(yt).map(y => `<tr><td>${y}</td><td>${yt[y].before_tax_pct.toFixed(1)}%</td><td>${yt[y].after_tax_pct.toFixed(1)}%</td></tr>`).join('') + '</table>';
+})();
+</script>
+</body>
+</html>

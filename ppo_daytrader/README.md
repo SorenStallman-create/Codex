@@ -54,6 +54,9 @@ pip install pyarrow
 python3 ext_data.py                            # round 5 inputs
 python3 walkforward.py train --variant ext && python3 walkforward.py evaluate --variant ext
 python3 prereg_check.py --variant ext          # pre-registered gates (prereg/)
+pip install lightgbm
+python3 edge_map.py                            # round 6, pre-registered (prereg/ROUND6_PREREG.md)
+python3 build_edge_page.py                     # artifacts/edge_map.html
 python3 build_report.py                        # artifacts/report.html
 python3 -m unittest tests.test_ppo_daytrader   # from the repo root
 ```
