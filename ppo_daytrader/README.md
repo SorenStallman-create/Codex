@@ -42,6 +42,11 @@ python3 walkforward.py evaluate --variant mlp
 python3 walkforward.py evaluate --variant deep
 python3 walkforward.py train --variant swing   # 4h bars, 30-day holds; 36 runs, ~40 min on 4 cores
 python3 walkforward.py evaluate --variant swing
+python3 indicators.py --src ../../data_src/btcmin  # Guard indicators at 15m and 4h
+python3 ic_scan.py && python3 rules_scan.py
+python3 walkforward.py train --variant ind     # 72 runs (real and zero fees), ~40 min
+python3 walkforward.py evaluate --variant ind
+python3 export_viewer.py --variant ind --market perp_nofee --year 2026 && python3 build_viewer.py
 python3 build_report.py                        # artifacts/report.html
 python3 -m unittest tests.test_ppo_daytrader   # from the repo root
 ```

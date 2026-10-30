@@ -37,7 +37,11 @@ PERP_MAKER = Market('perp_maker', (-1, 0, 1), cost=0.0006, funding=0.0001, maker
 # Swing: 4-hour steps, so 0.01% per 8h of funding is 0.005% per step held.
 SPOT_SWING = Market('spot_swing', (0, 1), cost=0.0020)
 PERP_SWING = Market('perp_swing', (-1, 0, 1), cost=0.0006, funding=0.00005, funding_each_step=True)
-MARKETS = {'spot': SPOT, 'perp': PERP, 'spot_maker': SPOT_MAKER, 'perp_maker': PERP_MAKER,
+# Zero-fee twins (Soren, 2026-10-30: "try again without tax"): no fee, slippage or funding.
+# A diagnostic of the gross edge, not a tradable market.
+SPOT_NOFEE = Market('spot_nofee', (0, 1), cost=0.0)
+PERP_NOFEE = Market('perp_nofee', (-1, 0, 1), cost=0.0)
+MARKETS = {'spot_nofee': SPOT_NOFEE, 'perp_nofee': PERP_NOFEE, 'spot': SPOT, 'perp': PERP, 'spot_maker': SPOT_MAKER, 'perp_maker': PERP_MAKER,
            'spot_swing': SPOT_SWING, 'perp_swing': PERP_SWING}
 FUNDING_BARS = (32, 64)  # bars that start at 08:00 and 16:00 UTC (15-minute sessions)
 

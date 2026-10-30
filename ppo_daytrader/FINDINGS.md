@@ -107,8 +107,62 @@ unchanged. Figures are per-day rates, with a 2-chunk block bootstrap.
 No swing configuration is a candidate for leverage. Leverage would only magnify a 76–87%
 drawdown driven by market exposure.
 
+## Round 4: zero fees, and the long-term indicators at short-term speed
+
+Soren asked for a run without fees, and for the Trading Lab's long-term indicators (Trend
+Guard, Breakout Guard, Pullback Guard: SMA 20/50, EMA200 regime, Donchian 20/10, RSI 14, ATR 14)
+to be turned into short-term inputs. `indicators.py` computes each one twice: on 15-minute bars,
+and as the original 4-hour version taken from the last completed 4-hour bar. Together with session
+VWAP and on-balance volume, that adds 24 inputs, for 44 in total. The PPO was retrained at real
+fees and at zero fees (no fee, slippage or funding). The zero-fee version is a diagnostic, not a
+tradable setup.
+
+**Why early 2021 looked good and then faded.** From Jan 1 to Feb 20, 2021, the first compact spot
+ensemble made +1.09% a day. Over the same weeks BTC rose 1.43% a day intraday. The ensemble was
+long half the time, and its daily P&L tracked BTC with a correlation of 0.78. That was the bull
+market, not skill. From Feb 21 to May 1 it lost 0.47% a day.
+
+**At short horizons the long-term indicators flip sign** (`ic_scan.py`, `artifacts/ic_scan.json`).
+Against the next 15 minutes to 4 hours, 15-minute RSI, distance above the 20-bar high, price vs
+its 4-hour mean and session VWAP all have a *negative* rank IC of −0.03 to −0.10. The sign is the
+same in every period from 2018 to 2026. Strength over the last few hours is followed by slight
+pullbacks, so the short-term equivalent of a trend signal is a fade. The 4-hour Guard
+indicators carry almost no information about the next few hours.
+
+| Pooled 2021–2026, %/day | Zero fees | Real fees, perp | Real fees, spot |
+|---|---|---|---|
+| PPO with 44 inputs, perp | **+0.451** (+0.314 … +0.594), 57 trades/day | −0.003, ~0 trades | — |
+| PPO with 44 inputs, spot | +0.232 (+0.135 … +0.333), 27 trades/day | — | −0.016, ~0 trades |
+| First PPO (17 inputs) | | −0.185 | −0.149 |
+| Breakout Guard 4h, held intraday | +0.080 (+0.010 … +0.155) | +0.038 (−0.033 … +0.109) | −0.043 |
+| Trend Guard 4h, held intraday | +0.066 | +0.008 | −0.102 |
+| 4h trend + 15m RSI dip | +0.046 (+0.011 … +0.082) | −0.022 | −0.048 |
+| Intraday buy & hold | +0.088 | −0.052 | −0.312 |
+| Linear forecast | +0.347 (perp) | +0.033 (−0.006 … +0.073) | 0 |
+
+1. **Without fees, the network clearly works.** It finds the short-term fade with every input
+   type: close within the bar, distance from the 20-bar high and 10-bar low, distance from the
+   4-hour mean, and session VWAP. Shuffling any of these during play costs 0.09–0.16% a day.
+   The zero-fee perp ensemble is positive in every test year.
+2. **The edge per trade is far smaller than the fee.** +0.45% a day spread over 57 trades is about
+   0.008% (0.8 bp) per trade. The perp fee is 0.06% per side. Trained with real fees, the same
+   network learns that almost nothing clears the cost and stays flat. That is the correct answer,
+   and much better than the first network's −0.19% a day.
+3. **The edge is shrinking.** The zero-fee perp result by test year is +0.93, +0.47, +0.30, +0.55,
+   +0.24 and +0.14% a day for 2021 to 2026, and the indicator ICs weaken in the same way. This is
+   the "works in 2021, then craps out" pattern. The short-term inefficiency the network finds is
+   being competed away.
+4. **The long-term bots held intraday are the best real-fee rules,** but not significant. Breakout
+   Guard 4h on perp makes +0.038% a day, with an interval that includes zero. These bots were
+   designed to hold for days, and the forced flat at midnight works against them.
+
+`network_viewer.html` (built by `export_viewer.py` and `build_viewer.py`) plays one network
+through real 2026 test days bar by bar. It shows every input, both hidden layers, the strongest
+weight × activation flows, the action probabilities, and the inputs behind each decision.
+
 ## What would change the verdict
 
 - Lower real costs: maker rebates or VIP fee tiers, which only matter with fill-rate data.
 - ~~A longer holding horizon~~: tested in Round 3. It removes the cost drag, but no directional edge appears.
+- A short-term edge large enough to pay the fee. Round 4 found a real one, but at about 0.8 bp per trade it is roughly 15× too small for perp taker fees. A venue with maker rebates *and* fill data would be the only way to test it honestly.
 - Information that isn't in OHLCV: order book imbalance, funding and basis, liquidations.

@@ -13,6 +13,7 @@ from env import MARKETS, bar_returns, hl_returns, step, state_features, run_poli
 from data import FEATURES, STATE, CONTEXT, SEQ_CHANNELS, SEQ_LEN
 
 INPUTS = FEATURES + STATE
+INPUTS_IND = FEATURES + __import__('indicators').IND_FEATURES + STATE
 INPUTS_DEEP = FEATURES + CONTEXT + [f'{c}@t-{SEQ_LEN - k}' for c in SEQ_CHANNELS for k in range(SEQ_LEN)] + STATE
 
 

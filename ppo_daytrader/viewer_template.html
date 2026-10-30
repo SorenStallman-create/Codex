@@ -1,0 +1,323 @@
+<meta charset="utf-8">
+<title>PPO Trader Network Viewer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one instrument panel. Transport on top, price tape, then the network read left to right (inputs -> neurons -> decision), with the reasons beside it. */
+:root {
+  --bg: #f3f4f6; --panel: #ffffff; --ink: #1b2330; --muted: #5d6676; --line: #d9dde4; --grid: #eceef2;
+  --long: #0f8a6c; --short: #c8462f; --flat: #8a93a3; --accent: #2f5bd3;
+  --neg: #4a4fc4; --pos: #d98a12; --mid: #e9ebf0; --hold-long: rgba(15,138,108,.12); --hold-short: rgba(200,70,47,.12);
+  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --panel: #181e27; --ink: #e5e9f0; --muted: #98a2b3; --line: #2b3441; --grid: #212935;
+  --long: #34c79e; --short: #f0735a; --flat: #7d8796; --accent: #7aa0ff;
+  --neg: #8b8ff5; --pos: #f2b041; --mid: #2a3240; --hold-long: rgba(52,199,158,.13); --hold-short: rgba(240,115,90,.13); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151c; --panel: #181e27; --ink: #e5e9f0; --muted: #98a2b3; --line: #2b3441; --grid: #212935;
+  --long: #34c79e; --short: #f0735a; --flat: #7d8796; --accent: #7aa0ff;
+  --neg: #8b8ff5; --pos: #f2b041; --mid: #2a3240; --hold-long: rgba(52,199,158,.13); --hold-short: rgba(240,115,90,.13); color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--body) }
+main { max-width: 1320px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px }
+h1 { font: 800 clamp(26px, 4vw, 38px)/1.05 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance }
+h2 { font: 700 15px/1.2 var(--display); margin: 0; letter-spacing: .01em }
+.eyebrow { font: 500 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.lede { color: var(--muted); max-width: 72ch; margin: 6px 0 0 }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0 }
+.panel > *, main > *, .grid-main > * { min-width: 0 }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { font: 500 12px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink) }
+.chip small { font-family: var(--mono); opacity: .75; margin-left: 4px }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.transport { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.tbtn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; font: 600 14px var(--mono) }
+.tbtn.play { background: var(--accent); color: var(--panel); border-color: var(--accent); width: 44px }
+input[type=range] { width: 100%; accent-color: var(--accent) }
+.clock { font: 500 20px var(--mono); font-variant-numeric: tabular-nums; min-width: 6ch; text-align: right }
+.speed { font: 400 12px var(--body); color: var(--muted) }
+.speed select { font: 500 12px var(--mono); background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 3px }
+.grid-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start }
+@media (max-width: 1000px) { .grid-main { grid-template-columns: minmax(0, 1fr) } .transport { grid-template-columns: auto minmax(0,1fr) } .transport .clock { display: none } }
+.scroll { overflow-x: auto }
+svg { display: block; width: 100%; height: auto }
+svg text { fill: var(--muted); font: 400 10px var(--mono) }
+svg .lab { fill: var(--ink); font: 400 10.5px var(--body) }
+svg .lab.grp { fill: var(--muted); font: 500 9px var(--mono); letter-spacing: .08em }
+svg .big { fill: var(--ink); font: 600 13px var(--display) }
+.node { transition: fill .18s linear }
+.decision { display: grid; gap: 10px }
+.verdict { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap }
+.verdict b { font: 800 30px/1 var(--display); letter-spacing: .02em }
+.pbar { display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 8px; align-items: center; font: 500 12px var(--mono); font-variant-numeric: tabular-nums }
+.pbar .track { height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden }
+.pbar .fill { height: 100%; border-radius: 5px; transition: width .18s linear }
+.why { display: grid; gap: 6px }
+.why .r { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 8px; align-items: center; font-size: 12.5px }
+.why .r span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.why .bar { height: 8px; border-radius: 4px }
+.note { color: var(--muted); font-size: 12.5px; margin: 0 }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.stats div { display: grid; gap: 2px }
+.stats b { font: 600 15px var(--mono); font-variant-numeric: tabular-nums }
+.log { max-height: 340px; overflow-y: auto; font: 400 12px/1.45 var(--mono); display: grid; gap: 2px }
+.log button { all: unset; cursor: pointer; padding: 3px 6px; border-radius: 5px; display: grid; grid-template-columns: 46px 64px minmax(0, 1fr); gap: 6px }
+.log button:hover, .log button.cur { background: var(--grid) }
+.log .L { color: var(--long) } .log .S { color: var(--short) } .log .F { color: var(--flat) }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted) }
+.legend i { display: inline-block; width: 22px; height: 8px; border-radius: 4px; vertical-align: middle; margin-right: 6px }
+@media (prefers-reduced-motion: reduce) { .node, .pbar .fill { transition: none } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow" id="kicker">BTC/USD · 15-minute bars · paper only</div>
+    <h1>Watch the network trade</h1>
+    <p class="lede">Every 15 minutes the network reads its inputs on the left, passes them through two layers of 64 neurons, and picks a position on the right. Press play to step through a real test day it had never seen. Lines show the strongest signals flowing through the network at that moment; the panel on the right says which inputs pushed the decision.</p>
+  </header>
+
+  <div class="panel" style="display:grid;gap:10px">
+    <div class="row" style="justify-content:space-between">
+      <div style="display:grid;gap:6px"><span class="eyebrow">Model</span><div class="chips" id="models"></div></div>
+      <p class="note" id="model-note" style="max-width:62ch"></p>
+    </div>
+    <div style="display:grid;gap:6px"><span class="eyebrow">Test day</span><div class="chips" id="days"></div></div>
+  </div>
+
+  <div class="panel transport">
+    <div class="row" style="gap:6px">
+      <button class="tbtn" id="back" aria-label="Previous bar">‹</button>
+      <button class="tbtn play" id="play" aria-label="Play">▶</button>
+      <button class="tbtn" id="fwd" aria-label="Next bar">›</button>
+    </div>
+    <div style="display:grid;gap:2px">
+      <input type="range" id="scrub" min="0" max="95" value="0" aria-label="Bar">
+      <div class="row" style="justify-content:space-between"><span class="note" id="tnote"></span>
+        <label class="speed">Speed <select id="speed"><option value="900">slow</option><option value="450" selected>normal</option><option value="160">fast</option></select></label></div>
+    </div>
+    <div class="clock" id="clock">00:00</div>
+  </div>
+
+  <div class="panel" style="display:grid;gap:6px">
+    <div class="row" style="justify-content:space-between"><h2>Price and position</h2>
+      <div class="legend"><span><i style="background:var(--hold-long);border:1px solid var(--long)"></i>holding long</span><span><i style="background:var(--hold-short);border:1px solid var(--short)"></i>holding short</span><span><i style="background:var(--accent)"></i>now</span></div></div>
+    <div id="price"></div>
+  </div>
+
+  <div class="grid-main">
+    <div class="panel" style="display:grid;gap:8px">
+      <div class="row" style="justify-content:space-between"><h2>The network, right now</h2>
+        <div class="legend"><span><i style="background:var(--pos)"></i>positive signal</span><span><i style="background:var(--neg)"></i>negative signal</span></div></div>
+      <p class="note">Input bars show each value in standard deviations. Circles are neurons, colored by how strongly they fire (−1 to +1). A line is drawn only for the strongest weight × activation products at this bar, thicker for stronger.</p>
+      <div class="scroll"><div id="net" style="min-width:760px"></div></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="panel decision">
+        <span class="eyebrow" id="dtime">Decision</span>
+        <div class="verdict"><b id="act">FLAT</b><span class="note" id="act-note"></span></div>
+        <div id="probs" style="display:grid;gap:6px"></div>
+        <div class="stats">
+          <div><span class="eyebrow">Critic value</span><b id="val">0</b></div>
+          <div><span class="eyebrow">Day P&amp;L</span><b id="pnl">0</b></div>
+          <div><span class="eyebrow">Trades</span><b id="ntr">0</b></div>
+        </div>
+      </div>
+      <div class="panel" style="display:grid;gap:8px">
+        <h2 id="why-title">Why</h2>
+        <p class="note" id="why-note"></p>
+        <div class="why" id="why"></div>
+      </div>
+      <div class="panel" style="display:grid;gap:8px">
+        <h2>Decision log</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = (x, d=2) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d);
+let MI = 0, SI = 0, J = 0, timer = null;
+const M = () => D.models[MI], S = () => M().sessions[SI];
+const posName = p => p > 0 ? 'LONG' : p < 0 ? 'SHORT' : 'FLAT';
+const posCol = p => p > 0 ? css('--long') : p < 0 ? css('--short') : css('--flat');
+const hhmm = j => `${String(Math.floor(j / 4)).padStart(2, '0')}:${String(j % 4 * 15).padStart(2, '0')}`;
+function heat(v) {
+  const t = Math.max(-1, Math.min(1, v));
+  return `color-mix(in srgb, ${css(t < 0 ? '--neg' : '--pos')} ${Math.round(Math.abs(t) * 90)}%, ${css('--mid')})`;
+}
+const GROUPS = [
+  ['PRICE ACTION', n => /^(r1|r4|r16|r64|r_day|r_prev_day|dev16|dev96|clv)$/.test(n)],
+  ['VOLATILITY & VOLUME', n => /^(vol16_rel|vol96_rel|range_rel|volu_z|vwap_dev|obv_slope)$/.test(n)],
+  ['CALENDAR', n => /^(tod|dow)_/.test(n)],
+  ['15-MIN GUARD INDICATORS', n => n.startsWith('m15_')],
+  ['4-HOUR GUARD INDICATORS', n => n.startsWith('h4_')],
+  ['AGENT STATE', n => /^(position|time_left|unreal)$/.test(n)],
+];
+
+// ---------- layout (rebuilt per model) ----------
+let L = null;
+function layout() {
+  const m = M(), nIn = m.inputs.length, order = [];
+  GROUPS.forEach(([g, f]) => { const ix = m.inputs.map((n, i) => i).filter(i => f(m.inputs[i])); if (ix.length) order.push({g, ix}) });
+  const rh = 15.5, gh = 16, top = 8;
+  const rows = []; let y = top;
+  order.forEach(({g, ix}) => { rows.push({grp: g, y: y + 10}); y += gh; ix.forEach(i => { rows.push({i, y: y + rh / 2}); y += rh }) });
+  const H = y + 10, W = 1000;
+  const xIn = 290, xH1 = 560, xH2 = 760, xOut = 930;
+  const nH = m.weights.W1.length;
+  const hy = k => top + 10 + (H - top - 30) * (k + .5) / nH;
+  const inY = {}; rows.forEach(r => { if (r.i != null) inY[r.i] = r.y });
+  const nA = m.positions.length, oy = a => H / 2 + (a - (nA - 1) / 2) * 90;
+  L = {rows, H, W, xIn, xH1, xH2, xOut, hy, inY, oy, nH};
+  let g = `<g id="edges"></g>`;
+  rows.forEach(r => {
+    if (r.grp) { g += `<text class="lab grp" x="4" y="${r.y}">${r.grp}</text>`; return }
+    g += `<text class="lab" x="4" y="${r.y + 3.5}">${esc(m.labels[r.i])}</text>`;
+    g += `<line x1="230" x2="230" y1="${r.y - 6}" y2="${r.y + 6}" stroke="${css('--line')}"/>`;
+    g += `<rect id="ib${r.i}" x="230" y="${r.y - 4.5}" width="0" height="9" rx="2"/>`;
+    g += `<circle cx="${xIn}" cy="${r.y}" r="3.2" fill="${css('--line')}"/>`;
+  });
+  for (let k = 0; k < nH; k++) {
+    g += `<circle class="node" id="h1_${k}" cx="${xH1}" cy="${hy(k)}" r="5.2" stroke="${css('--line')}" stroke-width=".6"/>`;
+    g += `<circle class="node" id="h2_${k}" cx="${xH2}" cy="${hy(k)}" r="5.2" stroke="${css('--line')}" stroke-width=".6"/>`;
+  }
+  g += `<text x="${xH1}" y="${H - 4}" text-anchor="middle">layer 1 · ${nH} neurons</text><text x="${xH2}" y="${H - 4}" text-anchor="middle">layer 2 · ${nH} neurons</text>`;
+  m.positions.forEach((p, a) => {
+    g += `<circle class="node" id="o${a}" cx="${xOut}" cy="${oy(a)}" r="18" fill="${css('--mid')}" stroke="${posCol(p)}" stroke-width="2"/>`;
+    g += `<text class="big" x="${xOut}" y="${oy(a) + 36}" text-anchor="middle" style="fill:${posCol(p)}">${posName(p)}</text>`;
+    g += `<text id="op${a}" x="${xOut}" y="${oy(a) + 4}" text-anchor="middle" style="fill:var(--ink);font-weight:600">0%</text>`;
+  });
+  document.getElementById('net').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Network diagram">${g}</svg>`;
+}
+
+function topk(list, k) { return list.sort((a, b) => Math.abs(b.c) - Math.abs(a.c)).slice(0, k) }
+
+function drawNet() {
+  const m = M(), s = S(), x = s.x[J], h1 = s.h1[J], h2 = s.h2[J], W1 = m.weights.W1, W2 = m.weights.W2, W3 = m.weights.W3;
+  // input bars
+  x.forEach((v, i) => { const el = document.getElementById('ib' + i); if (!el) return; const w = Math.max(-1, Math.min(1, v / 3)) * 50;
+    el.setAttribute('x', w < 0 ? 230 + w : 230); el.setAttribute('width', Math.abs(w)); el.setAttribute('fill', heat(v / 2)) });
+  h1.forEach((v, k) => document.getElementById('h1_' + k).setAttribute('fill', heat(v)));
+  h2.forEach((v, k) => document.getElementById('h2_' + k).setAttribute('fill', heat(v)));
+  const p = s.probs[J];
+  m.positions.forEach((q, a) => { document.getElementById('o' + a).setAttribute('fill', `color-mix(in srgb, ${posCol(q)} ${Math.round(p[a] * 85)}%, ${css('--mid')})`);
+    document.getElementById('op' + a).textContent = Math.round(p[a] * 100) + '%' });
+  // strongest flows
+  const e1 = [], e2 = [], e3 = [];
+  for (let k = 0; k < W1.length; k++) for (let i = 0; i < x.length; i++) e1.push({k, i, c: W1[k][i] * x[i]});
+  for (let k = 0; k < W2.length; k++) for (let j = 0; j < h1.length; j++) e2.push({k, j, c: W2[k][j] * h1[j]});
+  const act = s.held[J], ai = m.positions.indexOf(act);
+  for (let a = 0; a < W3.length; a++) for (let k = 0; k < h2.length; k++) e3.push({a, k, c: W3[a][k] * h2[k] * (a === ai ? 1.6 : 1)});
+  const pick = [...topk(e1, 70)], pick2 = topk(e2, 70), pick3 = topk(e3, 36);
+  const mx = l => Math.max(...l.map(e => Math.abs(e.c)), 1e-9);
+  const m1 = mx(pick), m2 = mx(pick2), m3 = mx(pick3);
+  const path = (x0, y0, x1, y1, c, m) => { const t = Math.abs(c) / m; const mxp = (x0 + x1) / 2;
+    return `<path d="M${x0} ${y0}C${mxp} ${y0} ${mxp} ${y1} ${x1} ${y1}" fill="none" stroke="${css(c < 0 ? '--neg' : '--pos')}" stroke-width="${(0.4 + 2.6 * t).toFixed(2)}" opacity="${(0.15 + 0.7 * t).toFixed(2)}"/>` };
+  let g = '';
+  pick.forEach(e => g += path(L.xIn, L.inY[e.i], L.xH1 - 5, L.hy(e.k), e.c, m1));
+  pick2.forEach(e => g += path(L.xH1 + 5, L.hy(e.j), L.xH2 - 5, L.hy(e.k), e.c, m2));
+  pick3.forEach(e => g += path(L.xH2 + 5, L.hy(e.k), L.xOut - 18, L.oy(e.a), e.c, m3));
+  document.getElementById('edges').innerHTML = g;
+}
+
+// ---------- price ----------
+function drawPrice() {
+  const s = S(), W = 1000, H = 230, pl = 58, pr = 10, pt = 10, pb = 22, n = s.close.length;
+  const lo = Math.min(...s.low), hi = Math.max(...s.high);
+  const X = i => pl + (W - pl - pr) * (i + .5) / n, bw = (W - pl - pr) / n;
+  const Y = v => pt + (H - pt - pb) * (1 - (v - lo) / (hi - lo || 1));
+  let g = '';
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; g += `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--grid')}"/><text x="${pl - 6}" y="${Y(v) + 3}" text-anchor="end">${v.toFixed(0)}</text>` }
+  s.held.forEach((p, i) => { if (p) g += `<rect x="${X(i) - bw / 2}" y="${pt}" width="${bw + .3}" height="${H - pt - pb}" fill="${p > 0 ? css('--hold-long') : css('--hold-short')}"/>` });
+  for (let i = 0; i < n; i++) { const up = s.close[i] >= s.open[i], c = up ? css('--long') : css('--short');
+    g += `<line x1="${X(i)}" x2="${X(i)}" y1="${Y(s.high[i])}" y2="${Y(s.low[i])}" stroke="${c}" opacity="${i <= J ? .9 : .3}"/>`;
+    g += `<rect x="${X(i) - bw * .32}" y="${Y(Math.max(s.open[i], s.close[i]))}" width="${bw * .64}" height="${Math.max(1, Math.abs(Y(s.open[i]) - Y(s.close[i])))}" fill="${c}" opacity="${i <= J ? .9 : .3}"/>` }
+  // entries/exits
+  s.held.forEach((p, i) => { const prev = i ? s.held[i - 1] : 0; if (p !== prev) g += `<path d="M${X(i)} ${H - pb + 2}l-4 7h8z" fill="${posCol(p)}"/>` });
+  g += `<line x1="${X(J) - bw / 2}" x2="${X(J) - bw / 2}" y1="${pt}" y2="${H - pb}" stroke="${css('--accent')}" stroke-width="2"/>`;
+  [0, 24, 48, 72, 95].forEach(i => g += `<text x="${X(i)}" y="${H - 4}" text-anchor="middle">${hhmm(i)}</text>`);
+  document.getElementById('price').innerHTML = `<div class="scroll"><div style="min-width:560px"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Price chart">${g}</svg></div></div>`;
+}
+
+// ---------- side panel ----------
+function drawSide() {
+  const m = M(), s = S(), p = s.probs[J], act = s.held[J], prev = J ? s.held[J - 1] : 0;
+  document.getElementById('dtime').textContent = `Decision at ${hhmm(J)} UTC · fills at this bar's open`;
+  const el = document.getElementById('act'); el.textContent = posName(act); el.style.color = posCol(act);
+  document.getElementById('act-note').textContent = act === prev ? `holding (${posName(prev).toLowerCase()} before)` : `changed from ${posName(prev).toLowerCase()}`;
+  document.getElementById('probs').innerHTML = m.positions.map((q, a) => `<div class="pbar"><span style="color:${posCol(q)}">${posName(q)}</span><div class="track"><div class="fill" style="width:${(p[a] * 100).toFixed(1)}%;background:${posCol(q)}"></div></div><span>${(p[a] * 100).toFixed(0)}%</span></div>`).join('');
+  document.getElementById('val').textContent = fmt(s.value[J], 2);
+  const cum = s.step_log_pct.slice(0, J + 1).reduce((a, b) => a + b, 0);
+  const pe = document.getElementById('pnl'); pe.textContent = fmt(cum, 2) + '%'; pe.style.color = cum >= 0 ? css('--long') : css('--short');
+  let tr = 0; for (let i = 0; i <= J; i++) if (s.held[i] !== (i ? s.held[i - 1] : 0)) tr++;
+  document.getElementById('ntr').textContent = tr;
+  // why: margin of the chosen (or most tempting) non-flat action over flat
+  const keys = Object.keys(s.why);
+  let key = act > 0 ? 'long' : act < 0 ? 'short' : null;
+  if (!key) key = keys.sort((a, b) => p[m.positions.indexOf(b === 'long' ? 1 : -1)] - p[m.positions.indexOf(a === 'long' ? 1 : -1)])[0];
+  const w = s.why[key][J];
+  const rows = w.map((c, i) => ({i, c})).sort((a, b) => Math.abs(b.c) - Math.abs(a.c)).slice(0, 8);
+  const mx = Math.max(...rows.map(r => Math.abs(r.c)), 1e-9);
+  const dir = key === 'long' ? css('--long') : css('--short');
+  document.getElementById('why-title').textContent = act !== 0 ? `Why ${key}` : `Why not ${key}`;
+  document.getElementById('why-note').textContent = act !== 0
+    ? `Inputs that raised (bar to the right) or lowered (left) the network's preference for ${key} over flat at this bar, compared with an average moment.`
+    : `It stayed flat. These inputs moved its preference for ${key}, the closest alternative, up (right) or down (left).`;
+  document.getElementById('why').innerHTML = rows.map(r => { const wd = Math.abs(r.c) / mx * 45;
+    return `<div class="r"><span title="${esc(m.inputs[r.i])}">${esc(m.labels[r.i])} <span style="color:var(--muted);font:400 11px var(--mono)">${fmt(s.x[J][r.i], 2)}</span></span><svg viewBox="0 0 90 10" style="height:10px"><line x1="45" x2="45" y1="0" y2="10" stroke="${css('--line')}"/><rect x="${r.c < 0 ? 45 - wd : 45}" y="1" width="${wd}" height="8" rx="2" fill="${r.c < 0 ? css('--flat') : dir}"/></svg></div>` }).join('');
+  document.querySelectorAll('.log button').forEach(b => b.classList.toggle('cur', +b.dataset.j === J));
+}
+
+function drawLog() {
+  const s = S(), out = [];
+  s.held.forEach((p, i) => { const prev = i ? s.held[i - 1] : 0; if (p !== prev || i === 95) {
+    const cls = p > 0 ? 'L' : p < 0 ? 'S' : 'F';
+    const txt = i === 95 && p === prev ? 'session ends, forced flat' : (p === 0 ? `exit ${posName(prev).toLowerCase()}` : `enter ${posName(p).toLowerCase()}`);
+    out.push(`<button data-j="${i}"><span>${hhmm(i)}</span><span class="${cls}">${posName(p)}</span><span>${txt} · P=${(Math.max(...s.probs[i]) * 100).toFixed(0)}%</span></button>`) } });
+  document.getElementById('log').innerHTML = out.join('') || '<p class="note">No trades this day.</p>';
+  document.querySelectorAll('.log button').forEach(b => b.onclick = () => go(+b.dataset.j));
+}
+
+function go(j) { J = Math.max(0, Math.min(S().close.length - 1, j)); document.getElementById('scrub').value = J;
+  document.getElementById('clock').textContent = hhmm(J);
+  document.getElementById('tnote').textContent = `${S().day} · bar ${J + 1} of ${S().close.length}`;
+  drawPrice(); drawNet(); drawSide() }
+
+function pickSession(i) { SI = i; document.querySelectorAll('#days .chip').forEach((c, k) => c.setAttribute('aria-pressed', k === i)); drawLog(); go(0) }
+function pickModel(i) {
+  MI = i; const m = M();
+  document.querySelectorAll('#models .chip').forEach((c, k) => c.setAttribute('aria-pressed', k === i));
+  document.getElementById('model-note').textContent = `${m.title}. Trained ${m.train_range[0]} to ${m.train_range[1]}, checkpoint picked on ${m.val_range[0]} to ${m.val_range[1]}. Shown: seed ${m.seed}, the copy with the best validation score, playing on its own. Over all ${m.year_stats.days} test days of ${m.year} it averaged ${fmt(m.year_stats.mean_day_pct, 3)}% a day with ${m.year_stats.trades_per_day.toFixed(2)} trades a day.`;
+  document.getElementById('kicker').textContent = `BTC/USD · 15-minute bars · ${m.inputs.length} inputs · paper only`;
+  document.getElementById('days').innerHTML = m.sessions.map((s, k) => `<button class="chip" aria-pressed="false">${esc(s.tag)}<small>${s.day} · ${fmt(s.day_ret_pct, 2)}%</small></button>`).join('');
+  document.querySelectorAll('#days .chip').forEach((c, k) => c.onclick = () => { stop(); pickSession(k) });
+  layout(); pickSession(Math.min(SI, m.sessions.length - 1));
+}
+function stop() { clearInterval(timer); timer = null; document.getElementById('play').textContent = '▶'; document.getElementById('play').setAttribute('aria-label', 'Play') }
+function play() { if (timer) return stop(); if (J >= S().close.length - 1) go(0);
+  document.getElementById('play').textContent = '❚❚'; document.getElementById('play').setAttribute('aria-label', 'Pause');
+  timer = setInterval(() => { if (J >= S().close.length - 1) return stop(); go(J + 1) }, +document.getElementById('speed').value) }
+
+document.getElementById('models').innerHTML = D.models.map(m => `<button class="chip" aria-pressed="false">${esc(m.short)}</button>`).join('');
+document.querySelectorAll('#models .chip').forEach((c, k) => c.onclick = () => { stop(); pickModel(k) });
+document.getElementById('play').onclick = play;
+document.getElementById('back').onclick = () => { stop(); go(J - 1) };
+document.getElementById('fwd').onclick = () => { stop(); go(J + 1) };
+document.getElementById('scrub').oninput = e => { stop(); go(+e.target.value) };
+document.getElementById('speed').onchange = () => { if (timer) { stop(); play() } };
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowRight') { stop(); go(J + 1) } else if (e.key === 'ArrowLeft') { stop(); go(J - 1) } else if (e.key === ' ') { e.preventDefault(); play() } });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { layout(); go(J) });
+pickModel(0); go(40);
+</script>

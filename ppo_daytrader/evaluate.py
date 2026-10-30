@@ -8,18 +8,20 @@ import torch
 
 from data import OUT, FEATURES, CONTEXT, SEQ_CHANNELS, SEQ_LEN, STATE, load_sessions
 from env import MARKETS, bar_returns, run_policy, resample
-from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, policy_fn
+from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, INPUTS_IND, policy_fn
 from walkforward import PROTOCOL, VARIANTS, fold_list, sessions_for
 
 VARIANT, MODELS, SEEDS = 'mlp', VARIANTS['mlp']['models'], VARIANTS['mlp']['seeds']
 F = {n: i for i, n in enumerate(INPUTS)}
+MF = list(FEATURES)  # market inputs the linear baseline and policy surface read
 
 
 def set_variant(v):
-    global VARIANT, MODELS, SEEDS, INPUTS, F
+    global VARIANT, MODELS, SEEDS, INPUTS, F, MF
     VARIANT, MODELS, SEEDS = v, VARIANTS[v]['models'], VARIANTS[v]['seeds']
-    INPUTS = INPUTS_DEEP if v == 'deep' else globals()['INPUTS']
+    INPUTS = {'deep': INPUTS_DEEP, 'ind': INPUTS_IND}.get(v, FEATURES + STATE)
     F = {n: i for i, n in enumerate(INPUTS)}
+    MF = INPUTS[:-len(STATE)] if v == 'ind' else list(FEATURES)
 
 
 def groups():
@@ -72,13 +74,13 @@ def random_matched(market, switch_prob, rng):
 
 def fit_linear(sess, days, lam=10.0):
     """Ridge forecast of the next bar's return from the market features: the 'signal ceiling' check."""
-    x = np.asarray(sess['obs'][days])[..., :len(FEATURES)].reshape(-1, len(FEATURES)).astype(np.float64)
+    x = np.asarray(sess['obs'][days])[..., :len(MF)].reshape(-1, len(MF)).astype(np.float64)
     _, bar = bar_returns(sess['open'][days], sess['close'][days])
     y = bar.reshape(-1)
     xm, ym = x.mean(0), y.mean()
     xc = x - xm
     w = np.linalg.solve(xc.T @ xc + lam * len(x) * 1e-4 * np.eye(x.shape[1]), xc.T @ (y - ym))
-    return lambda X: (X[:, :len(FEATURES)] - xm) @ w + ym
+    return lambda X: (X[:, :len(MF)] - xm) @ w + ym
 
 
 def linear_rule(market, pred):
@@ -94,7 +96,7 @@ def linear_rule(market, pred):
 
 
 def ic(pred, sess, days):
-    x = np.asarray(sess['obs'][days])[..., :len(FEATURES)].reshape(-1, len(FEATURES)).astype(np.float64)
+    x = np.asarray(sess['obs'][days])[..., :len(MF)].reshape(-1, len(MF)).astype(np.float64)
     _, bar = bar_returns(sess['open'][days], sess['close'][days])
     p, y = pred(x), bar.reshape(-1)
     rk = lambda v: np.argsort(np.argsort(v))
@@ -214,8 +216,8 @@ def inspect(market, year, models, sess, days, played):  # noqa: C901
     if VARIANT == 'deep':
         lag_profile = {c: np.array(ig_raw['long_vs_flat']['mean_abs'])[G_[f'bars:{c}']].round(5).tolist() for c in SEQ_CHANNELS}
     key = 'long_vs_flat'
-    imp = np.array(ig_raw[key]['mean_abs'][:len(FEATURES)])
-    top2 = [FEATURES[i] for i in np.argsort(-imp)[:2]]
+    imp = np.array(ig_raw[key]['mean_abs'][:len(MF)])
+    top2 = [MF[i] for i in np.argsort(-imp)[:2]]
     grid = np.linspace(-3, 3, 25).astype(np.float32)
     G = np.tile(base, (25 * 25, 1)); G[:, F['position']] = 0; G[:, F['time_left']] = 0.5; G[:, F['unreal']] = 0
     G[:, F[top2[0]]] = np.repeat(grid, 25); G[:, F[top2[1]]] = np.tile(grid, 25)
@@ -253,6 +255,9 @@ def inspect(market, year, models, sess, days, played):  # noqa: C901
 
 def main(variant='mlp'):
     set_variant(variant)
+    if variant == 'ind':
+        from rules_scan import RULES, state_rule  # noqa: F401  (module-level names used above)
+        globals().update(RULES=RULES, state_rule=state_rule)
     sess = sessions_for(variant); fl = fold_list(variant, sess['days'])
     PD = VARIANTS[variant].get('period_days', 1)
     out = {'protocol': PROTOCOL, 'variant': variant, 'inputs': list(groups()), 'markets': {}}
@@ -283,6 +288,10 @@ def main(variant='mlp'):
                     'trend_11d': run_policy(market, sess, days, sign_rule(market, 'r64')),
                     'trend_16d_mean': run_policy(market, sess, days, sign_rule(market, 'dev96')),
                     'reversion_3d': run_policy(market, sess, days, sign_rule(market, 'r16', flip=True))}),
+                **({'breakout_guard_4h': run_policy(market, sess, days, state_rule(market, **RULES['breakout_guard_4h'])),
+                    'trend_guard_4h': run_policy(market, sess, days, state_rule(market, **RULES['trend_guard_4h'])),
+                    'trend_4h_dip_15m': run_policy(market, sess, days, state_rule(market, **RULES['trend_4h_dip_15m']))}
+                   if VARIANT == 'ind' else {}),
                 'linear_forecast': run_policy(market, sess, days, linear_rule(market, pred)),
                 'random_matched': run_policy(market, sess, days, random_matched(market, sw, np.random.default_rng(y))),
             }

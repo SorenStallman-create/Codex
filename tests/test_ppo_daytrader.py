@@ -62,6 +62,16 @@ class Accounting(unittest.TestCase):
         self.assertEqual(seen, list(range(BARS)))
 
 
+class IndicatorCausality(unittest.TestCase):
+    def test_guard_indicators_use_only_past_bars(self):
+        from indicators import indicator_frame
+        b = fake_bars(96 * 40)
+        full = indicator_frame(b)
+        for i in (96 * 20 + 7, 96 * 30 + 15, 96 * 40 - 1):  # includes bars right after a 4h close
+            part = indicator_frame(b.iloc[:i + 1])
+            np.testing.assert_allclose(part.iloc[-1].values, full.iloc[i].values, rtol=1e-4, atol=1e-4)
+
+
 class SwingFolds(unittest.TestCase):
     def test_chunks_never_overlap_what_follows(self):
         from walkforward import folds

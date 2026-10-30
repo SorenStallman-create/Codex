@@ -42,6 +42,12 @@ VARIANTS = {
     # Same PPO settings; folds are purged so no train/validation chunk overlaps what follows it.
     'swing': {'models': OUT / 'models_swing', 'loader': load_sessions_swing, 'arch': 'mlp', 'seeds': [11, 22, 33],
               'updates': 400, 'markets': ['spot_swing', 'perp_swing'], 'period_days': SWING_CHUNK_DAYS},
+    # Round 4 (2026-10-30, Soren: retry without fees, port the long-term indicators): the
+    # Trend/Breakout/Pullback Guard inputs at 15-minute and 4-hour speed, trained at real
+    # fees and at zero fees. Settings frozen here before any of its test years are scored.
+    'ind': {'models': OUT / 'models_ind', 'loader': lambda: __import__('indicators').load_sessions_ind(),
+            'arch': 'mlp', 'seeds': [11, 22, 33], 'updates': 400,
+            'markets': ['spot', 'perp', 'spot_nofee', 'perp_nofee']},
 }
 
 
