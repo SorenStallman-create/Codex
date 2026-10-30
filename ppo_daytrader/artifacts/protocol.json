@@ -50,6 +50,14 @@
       "seeds": "[11, 22, 33]",
       "updates": "400",
       "markets": "['spot_maker', 'perp_maker']"
+    },
+    "swing": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models_swing",
+      "arch": "mlp",
+      "seeds": "[11, 22, 33]",
+      "updates": "400",
+      "markets": "['spot_swing', 'perp_swing']",
+      "period_days": "30"
     }
   }
 }

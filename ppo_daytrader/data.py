@@ -167,16 +167,6 @@ def load_sessions():
     return {k: z[k] for k in z.files}
 
 
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--src', default='../data_src/btcmin', help='clone of ff137/bitstamp-btcusd-minute-data')
-    ap.add_argument('--v2', action='store_true', help='also build the sequence + VIX inputs for the deep model')
-    a = ap.parse_args()
-    build(a.src)
-    if a.v2:
-        build_v2(a.src)
-
-
 # ---------- v2 inputs: raw bar sequence + Equibles VIX context ----------
 SEQ_LEN = 64  # 16 hours of 15-minute bars
 SEQ_CHANNELS = ['ret', 'high', 'low', 'gap', 'volume', 'range']
@@ -263,3 +253,16 @@ def build_swing(src):
 def load_sessions_swing():
     z = np.load(OUT / 'sessions_swing.npz', allow_pickle=False)
     return {k: z[k] for k in z.files}
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--src', default='../data_src/btcmin', help='clone of ff137/bitstamp-btcusd-minute-data')
+    ap.add_argument('--v2', action='store_true', help='also build the sequence + VIX inputs for the deep model')
+    ap.add_argument('--swing', action='store_true', help='also build the 4-hour, 30-day swing sessions')
+    a = ap.parse_args()
+    build(a.src)
+    if a.v2:
+        build_v2(a.src)
+    if a.swing:
+        build_swing(a.src)

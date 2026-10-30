@@ -74,5 +74,5 @@
     "dow_cos"
   ],
   "causality": "obs for the decision held over bar j are features at close of bar j-1; fills at open of bar j",
-  "created_utc": "2026-10-30T01:09:14+00:00"
+  "created_utc": "2026-10-30T02:10:05+00:00"
 }

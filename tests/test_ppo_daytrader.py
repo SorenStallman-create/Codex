@@ -62,5 +62,21 @@ class Accounting(unittest.TestCase):
         self.assertEqual(seen, list(range(BARS)))
 
 
+class SwingFolds(unittest.TestCase):
+    def test_chunks_never_overlap_what_follows(self):
+        from walkforward import folds
+        days = np.arange(np.datetime64('2018-04-01'), np.datetime64('2026-09-27'), 5).astype(str)
+        d = days.astype('datetime64[D]'); L = np.timedelta64(30, 'D')
+        prev_test_end = None
+        for f in folds(days, period_days=30):
+            self.assertLessEqual(d[f['train']].max() + L, d[f['val']].min())
+            self.assertLessEqual(d[f['val']].max() + L, d[f['test']].min())
+            self.assertTrue((np.diff(d[f['test']]) >= L).all())  # back-to-back test chunks
+            self.assertLessEqual(d[f['test']].max() + L, np.datetime64(f"{f['year'] + 1}-01-01"))
+            if prev_test_end is not None:
+                self.assertLessEqual(prev_test_end, d[f['test']].min())
+            prev_test_end = d[f['test']].max() + L
+
+
 if __name__ == '__main__':
     unittest.main()

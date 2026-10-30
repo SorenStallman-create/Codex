@@ -9,7 +9,7 @@ import torch
 from data import OUT, FEATURES, CONTEXT, SEQ_CHANNELS, SEQ_LEN, STATE, load_sessions
 from env import MARKETS, bar_returns, run_policy, resample
 from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, policy_fn
-from walkforward import PROTOCOL, VARIANTS, folds, sessions_for
+from walkforward import PROTOCOL, VARIANTS, fold_list, sessions_for
 
 VARIANT, MODELS, SEEDS = 'mlp', VARIANTS['mlp']['models'], VARIANTS['mlp']['seeds']
 F = {n: i for i, n in enumerate(INPUTS)}
@@ -110,18 +110,24 @@ def block_boot(x, stat=np.mean, n=2000, block=7, rng=RNG):
     return [float(np.percentile(s, 2.5)), float(np.percentile(s, 97.5))]
 
 
-def metrics(r, bh=None):
-    d = r['daily_ret']
+def metrics(r, bh=None, period_days=1):
+    """One row per session. For multi-day chunks (swing) the per-day figures are the chunk's
+    geometric per-day rate, Sharpe is annualized by chunks per year, and the bootstrap block is
+    two chunks (about two months) instead of seven days."""
+    d = r['daily_ret']; P = period_days
+    per_day = (lambda x: np.expm1(np.log1p(x) / P)) if P > 1 else (lambda x: x)
+    blk = 7 if P == 1 else 2
     eq = np.cumprod(1 + d); peak = np.maximum.accumulate(np.concatenate([[1.0], eq]))[1:]
-    out = {'days': int(len(d)), 'mean_day_pct': 100 * float(d.mean()), 'ci95_mean_day_pct': [100 * v for v in block_boot(d)],
-           'total_return_pct': 100 * float(eq[-1] - 1), 'sharpe_ann': float(d.mean() / (d.std() + 1e-12) * np.sqrt(365)),
+    out = {'days': int(len(d) * P), 'periods': int(len(d)), 'period_days': P,
+           'mean_day_pct': 100 * float(per_day(d).mean()), 'ci95_mean_day_pct': [100 * v for v in block_boot(per_day(d), block=blk)],
+           'total_return_pct': 100 * float(eq[-1] - 1), 'sharpe_ann': float(d.mean() / (d.std() + 1e-12) * np.sqrt(365 / P)),
            'max_drawdown_pct': 100 * float((eq / peak - 1).min()), 'win_day_pct': 100 * float((d > 0).mean()),
-           'trades_per_day': float(r['turnover'].mean()), 'exposure_pct': 100 * float(np.abs(r['held']).mean()),
+           'trades_per_day': float(r['turnover'].mean() / P), 'exposure_pct': 100 * float(np.abs(r['held']).mean()),
            'equity': [float(v) for v in eq]}
     if bh is not None:
-        diff = d - bh
+        diff = per_day(d) - per_day(bh)
         out['vs_intraday_bh_mean_pct'] = 100 * float(diff.mean())
-        out['vs_intraday_bh_ci95_pct'] = [100 * v for v in block_boot(diff)]
+        out['vs_intraday_bh_ci95_pct'] = [100 * v for v in block_boot(diff, block=blk)]
     return out
 
 
@@ -247,7 +253,8 @@ def inspect(market, year, models, sess, days, played):  # noqa: C901
 
 def main(variant='mlp'):
     set_variant(variant)
-    sess = sessions_for(variant); fl = folds(sess['days'])
+    sess = sessions_for(variant); fl = fold_list(variant, sess['days'])
+    PD = VARIANTS[variant].get('period_days', 1)
     out = {'protocol': PROTOCOL, 'variant': variant, 'inputs': list(groups()), 'markets': {}}
     for mk in VARIANTS[variant].get('markets', PROTOCOL['markets']):
         market = MARKETS[mk]
@@ -268,13 +275,18 @@ def main(variant='mlp'):
                 **{f'ppo_seed{s}': run_policy(market, sess, days, policy_fn([m])) for s, m in zip(SEEDS, models)},
                 'flat': run_policy(market, sess, days, const(market, 0)),
                 'intraday_buy_hold': run_policy(market, sess, days, const(market, 1)),
-                'momentum_1h': run_policy(market, sess, days, sign_rule(market, 'r4')),
-                'momentum_4h': run_policy(market, sess, days, sign_rule(market, 'r16')),
-                'reversion_1h': run_policy(market, sess, days, sign_rule(market, 'r4', flip=True)),
+                **({'momentum_1h': run_policy(market, sess, days, sign_rule(market, 'r4')),
+                    'momentum_4h': run_policy(market, sess, days, sign_rule(market, 'r16')),
+                    'reversion_1h': run_policy(market, sess, days, sign_rule(market, 'r4', flip=True))} if PD == 1 else
+                   # swing bars are 4h: r16 = 64h (~2.7 days), r64 = ~10.7 days, dev96 = price vs its 16-day mean
+                   {'trend_3d': run_policy(market, sess, days, sign_rule(market, 'r16')),
+                    'trend_11d': run_policy(market, sess, days, sign_rule(market, 'r64')),
+                    'trend_16d_mean': run_policy(market, sess, days, sign_rule(market, 'dev96')),
+                    'reversion_3d': run_policy(market, sess, days, sign_rule(market, 'r16', flip=True))}),
                 'linear_forecast': run_policy(market, sess, days, linear_rule(market, pred)),
                 'random_matched': run_policy(market, sess, days, random_matched(market, sw, np.random.default_rng(y))),
             }
-            yr = {k: metrics(v, bh) for k, v in strategies.items()}
+            yr = {k: metrics(v, bh, PD) for k, v in strategies.items()}
             for k, v in strategies.items():
                 pooled.setdefault(k, []).append(v)
             # cost stress on the frozen ensemble (trained at the base cost)
@@ -282,7 +294,7 @@ def main(variant='mlp'):
             for mult in (0.0, 0.5, 1.0, 2.0):
                 mm = replace(market, cost=market.cost * mult)
                 r = run_policy(mm, sess, days, policy_fn(models))
-                yr['cost_stress'][str(mult)] = 100 * float(r['daily_ret'].mean())
+                yr['cost_stress'][str(mult)] = metrics(r, None, PD)['mean_day_pct']
             yr['signal_ceiling'] = {'linear_ic_test': ic(pred, sess, days),
                                     'linear_ic_train': ic(pred, sess, np.concatenate([f['train'], f['val']]))}
             # how directional is the ensemble's own preference? correlation of P(long)-P(short) with the held bar's return
@@ -310,7 +322,7 @@ def main(variant='mlp'):
             cat = {'daily_ret': np.concatenate([r['daily_ret'] for r in rs]),
                    'turnover': np.concatenate([r['turnover'] for r in rs]),
                    'held': np.concatenate([r['held'] for r in rs])}
-            res['pooled'][k] = metrics(cat, bh_all)
+            res['pooled'][k] = metrics(cat, bh_all, PD)
         out['markets'][mk] = res
     out['data_audit'] = json.loads((OUT / 'data_audit.json').read_text())
     path = OUT / ('results.json' if variant == 'mlp' else f'results_{variant}.json')

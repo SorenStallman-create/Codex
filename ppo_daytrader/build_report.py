@@ -27,6 +27,10 @@ def main():
     models = {'mlp': slim(json.loads((OUT / 'results.json').read_text()))}
     if (OUT / 'results_deep.json').exists():
         models['deep'] = slim(json.loads((OUT / 'results_deep.json').read_text()))
+    if (OUT / 'results_swing.json').exists():
+        sw = slim(json.loads((OUT / 'results_swing.json').read_text()))
+        sw['markets'] = {k.replace('_swing', ''): v for k, v in sw['markets'].items()}
+        models['swing'] = sw
     if (OUT / 'selection.json').exists():
         models['_selection'] = json.loads((OUT / 'selection.json').read_text())
     narrative = json.loads((ROOT / 'narrative.json').read_text()) if (ROOT / 'narrative.json').exists() else {}

@@ -11,7 +11,7 @@ from dataclasses import asdict
 from pathlib import Path
 import numpy as np
 
-from data import OUT, load_sessions, load_sessions_v2
+from data import OUT, SWING_CHUNK_DAYS, load_sessions, load_sessions_swing, load_sessions_v2
 
 PROTOCOL = {
     'frozen_utc': '2026-10-30',
@@ -37,6 +37,11 @@ VARIANTS = {
            'cadence': 4, 'markets': ['spot', 'perp', 'spot_maker', 'perp_maker']},
     'm15_maker': {'models': OUT / 'models_m15_maker', 'loader': load_sessions, 'arch': 'mlp', 'seeds': [11, 22, 33],
                   'updates': 400, 'markets': ['spot_maker', 'perp_maker']},
+    # Round 3 (2026-10-30, Soren chose longer holds): 4-hour decisions inside 30-day chunks, so a
+    # position can be held for weeks and each round trip is spread over a bigger expected move.
+    # Same PPO settings; folds are purged so no train/validation chunk overlaps what follows it.
+    'swing': {'models': OUT / 'models_swing', 'loader': load_sessions_swing, 'arch': 'mlp', 'seeds': [11, 22, 33],
+              'updates': 400, 'markets': ['spot_swing', 'perp_swing'], 'period_days': SWING_CHUNK_DAYS},
 }
 
 
@@ -46,8 +51,12 @@ def sessions_for(variant):
     return resample(V['loader'](), V.get('cadence', 1))
 
 
-def folds(days):
+def folds(days, period_days=1):
+    """With multi-day chunks (period_days > 1) every train and validation chunk must end before the
+    next window starts, and the test uses back-to-back, non-overlapping chunks."""
     d = np.array(days, dtype='datetime64[D]')
+    if period_days > 1:
+        return swing_folds(d, np.timedelta64(period_days, 'D'))
     out = []
     for y in PROTOCOL['test_years']:
         t0 = np.datetime64(f'{y}-01-01'); t1 = np.datetime64(f'{y + 1}-01-01')
@@ -59,12 +68,32 @@ def folds(days):
     return out
 
 
+def swing_folds(d, L):
+    out = []
+    for y in PROTOCOL['test_years']:
+        t0 = np.datetime64(f'{y}-01-01'); t1 = np.datetime64(f'{y + 1}-01-01')
+        v0 = t0 - np.timedelta64(PROTOCOL['val_days'], 'D')
+        test, k = [], np.searchsorted(d, t0)
+        while k < len(d) and d[k] + L <= t1:  # inside the year, so pooled test years never overlap
+            test.append(k)
+            k = np.searchsorted(d, d[k] + L)
+        out.append({'year': y,
+                    'train': np.where((d >= np.datetime64(PROTOCOL['train_start'])) & (d + L <= v0))[0],
+                    'val': np.where((d >= v0) & (d + L <= t0))[0],
+                    'test': np.array(test)})
+    return out
+
+
+def fold_list(variant, days):
+    return folds(days, VARIANTS[variant].get('period_days', 1))
+
+
 def job(args):
     market, year, seed, variant = args
     import torch
     from ppo import train, summary, PPOConfig
     V = VARIANTS[variant]; MODELS = V['models']
-    sess = sessions_for(variant); f = {x['year']: x for x in folds(sess['days'])}[year]
+    sess = sessions_for(variant); f = {x['year']: x for x in fold_list(variant, sess['days'])}[year]
     path = MODELS / f'{market}_{year}_s{seed}.pt'
     logf = open(MODELS / f'{market}_{year}_s{seed}.log', 'w')
     log = lambda s: (logf.write(s + '\n'), logf.flush())

@@ -34,12 +34,14 @@ the information available to it?
 ```bash
 git clone --depth 1 https://github.com/ff137/bitstamp-btcusd-minute-data ../data_src/btcmin
 pip install torch numpy pandas
-python3 ppo_daytrader/data.py --src ../data_src/btcmin --v2
+python3 ppo_daytrader/data.py --src ../data_src/btcmin --v2 --swing
 cd ppo_daytrader
 python3 walkforward.py train --variant mlp     # 36 runs, ~15 min on 4 cores
 python3 walkforward.py train --variant deep    # 24 runs, ~2 h on 4 cores
 python3 walkforward.py evaluate --variant mlp
 python3 walkforward.py evaluate --variant deep
+python3 walkforward.py train --variant swing   # 4h bars, 30-day holds; 36 runs, ~40 min on 4 cores
+python3 walkforward.py evaluate --variant swing
 python3 build_report.py                        # artifacts/report.html
 python3 -m unittest tests.test_ppo_daytrader   # from the repo root
 ```

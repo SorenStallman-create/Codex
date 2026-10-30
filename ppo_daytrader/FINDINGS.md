@@ -73,8 +73,42 @@ looked at (`artifacts/selection.json`):
 Leverage was not applied. It multiplies fees and drawdowns as much as returns, and there is
 no positive edge to size.
 
+## Round 3: longer holds (swing, 4-hour bars, up to 30 days)
+
+The same compact PPO is trained on continuous 4-hour bars cut into 30-day sessions. It can hold
+a position from 4 hours to 30 days and is forced flat at the end of each chunk. Train and
+validation chunks end before the next window starts, so they never overlap it, and each test year
+is played as 12 back-to-back chunks (9 in 2026). That is 2,070 test days in total. Costs are
+unchanged. Figures are per-day rates, with a 2-chunk block bootstrap.
+
+| Market | Strategy | %/day | 95% CI | vs buy & hold | Trades / 30 days | In market |
+|---|---|---|---|---|---|---|
+| Spot, 0.20%/side | PPO ensemble | −0.001 | −0.124 … +0.125 | −0.030 (−0.069 … +0.010) | 6.9 | 78% |
+| | Buy & hold (per chunk) | +0.028 | −0.100 … +0.155 | — | 2.0 | 100% |
+| | Linear forecast | −0.000 | −0.128 … +0.116 | −0.028 | 4.4 | 62% |
+| | Random, matched turnover | +0.002 | −0.067 … +0.069 | −0.027 | 3.7 | 32% |
+| | Trend: 3-day / 11-day / price vs 16-day mean | −0.092 / −0.066 / −0.015 | | all below B&H | 9–22 | ~52% |
+| Perp, 0.06%/side | PPO ensemble | −0.087 | −0.211 … +0.045 | −0.095 (−0.202 … +0.013) | 45 | 90% |
+| | Buy & hold (per chunk) | +0.008 | −0.129 … +0.137 | — | 2.0 | 100% |
+| | Linear forecast | −0.033 | −0.174 … +0.097 | −0.041 | 54 | 99% |
+
+1. **Longer holds fixed the cost problem.** The spot swing ensemble's result moves only about
+   0.03% a day between zero cost and base cost. In the day trader, that gap was the whole story.
+2. **Fixing costs exposed the next problem: no directional skill.** Spot swing PPO roughly
+   matched BTC by being long 78% of the time. It trailed buy and hold, and its long preference has
+   a rank IC between −0.03 and +0.02 against the next 4-hour bar. The perp version traded 45 times
+   per 30 days, both long and short, and lost 0.087% a day.
+3. **Simple trend following does not work here either.** Every trend and reversion rule trailed
+   buy and hold on both markets. The linear forecast of the next 4-hour bar has an out-of-sample
+   rank IC of −0.03 to +0.05, and its sign changes from year to year.
+4. Results by year track BTC's direction: the strategy gains in up years (2023, 2024) and loses
+   in down years (2022, 2025). That pattern is market exposure, not edge.
+
+No swing configuration is a candidate for leverage. Leverage would only magnify a 76–87%
+drawdown driven by market exposure.
+
 ## What would change the verdict
 
 - Lower real costs: maker rebates or VIP fee tiers, which only matter with fill-rate data.
-- A longer holding horizon, so a small per-bar edge compounds before paying costs.
+- ~~A longer holding horizon~~: tested in Round 3. It removes the cost drag, but no directional edge appears.
 - Information that isn't in OHLCV: order book imbalance, funding and basis, liquidations.
