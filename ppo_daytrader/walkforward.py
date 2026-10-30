@@ -48,6 +48,13 @@ VARIANTS = {
     'ind': {'models': OUT / 'models_ind', 'loader': lambda: __import__('indicators').load_sessions_ind(),
             'arch': 'mlp', 'seeds': [11, 22, 33], 'updates': 400,
             'markets': ['spot', 'perp', 'spot_nofee', 'perp_nofee']},
+    # Round 5 (2026-10-30, Soren: use all Mosaic data plus online data): adds funding, basis,
+    # open interest, perp volume, liquidations, taker ratio, Coinbase premium, exchange flows,
+    # Fear & Greed and the Andean/Laguerre/McGinley indicators (ext_data.py). Sessions
+    # 2020-01-08 to 2026-03-05 (the span of the hourly derivatives mirror). Frozen before scoring.
+    'ext': {'models': OUT / 'models_ext', 'loader': lambda: __import__('ext_data').load_sessions_ext(),
+            'arch': 'mlp', 'seeds': [11, 22, 33], 'updates': 400,
+            'markets': ['spot', 'perp', 'spot_nofee', 'perp_nofee']},
 }
 
 

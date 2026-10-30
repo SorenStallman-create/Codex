@@ -23,27 +23,38 @@ LABELS = {
     'position': 'Current position', 'time_left': 'Time left in day', 'unreal': 'Open P&L',
     'vwap_dev': 'Price vs session VWAP', 'obv_slope': 'On-balance volume trend',
 }
+LABELS.update({
+    'fund_bp': 'Funding rate (Binance)', 'fund_xvenue_bp': 'Funding, 5-venue average', 'fund_z30': 'Funding vs 30-day normal',
+    'basis_bp': 'Perp premium over spot', 'basis_chg24': 'Perp premium, 24h change', 'oi_chg1h': 'Open interest, 1h change',
+    'oi_chg4h': 'Open interest, 4h change', 'oi_chg24h': 'Open interest, 24h change', 'oi_z30': 'Open interest vs 30-day normal',
+    'perp_spot_vol': 'Perp vs spot volume', 'perp_vol_z': 'Perp volume surprise', 'fear_greed': 'Fear & Greed (yesterday)',
+    'fear_greed_chg7': 'Fear & Greed, 7-day change', 'liq_long_z': 'Long liquidations (yesterday)',
+    'liq_short_z': 'Short liquidations (yesterday)', 'liq_imbalance': 'Long minus short liquidations', 'taker_ratio': 'Taker buy/sell ratio',
+    'cb_premium': 'Coinbase premium', 'exch_netflow_z': 'Exchange net inflow', 'stable_ratio_z': 'Stablecoin reserves ratio',
+    'onchain_avail': 'On-chain data available',
+})
 for spd, nm in (('m15', '15m'), ('h4', '4h')):
     LABELS.update({f'{spd}_sma20_50': f'{nm} SMA20 vs SMA50', f'{spd}_close_ema200': f'{nm} price vs EMA200',
                    f'{spd}_ema200_slope': f'{nm} EMA200 slope', f'{spd}_regime': f'{nm} uptrend regime',
                    f'{spd}_breakout20': f'{nm} vs 20-bar high', f'{spd}_breakdown10': f'{nm} vs 10-bar low',
                    f'{spd}_rsi14': f'{nm} RSI 14', f'{spd}_atr_rel': f'{nm} ATR vs normal',
                    f'{spd}_trend_guard': f'{nm} Trend Guard on', f'{spd}_breakout_guard': f'{nm} Breakout Guard on',
-                   f'{spd}_pullback_guard': f'{nm} Pullback Guard on'})
+                   f'{spd}_pullback_guard': f'{nm} Pullback Guard on', f'{spd}_mcginley20': f'{nm} price vs McGinley 20',
+                   f'{spd}_laguerre05': f'{nm} price vs Laguerre', f'{spd}_andean35': f'{nm} Andean bull minus bear'})
 
 
 def r3(a):
     return np.round(np.asarray(a, np.float64), 3).tolist()
 
 
-def main(variant, market_name, year, n_sessions=8):
+def main(variant, market_name, year, n_sessions=8, seed=None):
     ev.set_variant(variant)
     market = MARKETS[market_name]
     sess = sessions_for(variant)
     f = {x['year']: x for x in fold_list(variant, sess['days'])}[year]
     models = ev.load_models(market_name, year)
     metas = [json.loads((ev.MODELS / f'{market_name}_{year}_s{s}.json').read_text())['meta'] for s in ev.SEEDS]
-    k = int(np.argmax([m['best_val_day_log_pct'] for m in metas]))
+    k = int(np.argmax([m['best_val_day_log_pct'] for m in metas])) if seed is None else ev.SEEDS.index(seed)
     net, seed = models[k], ev.SEEDS[k]
     days = f['test']
     played = run_policy(market, sess, days, policy_fn([net]), keep_obs=True)
@@ -89,7 +100,7 @@ def main(variant, market_name, year, n_sessions=8):
     W = lambda l: r3(l.weight.detach().numpy())
     B = lambda l: r3(l.bias.detach().numpy())
     out = {
-        'variant': variant, 'market': market_name, 'cost_per_side': market.cost, 'year': year, 'seed': seed,
+        'variant': variant, 'seed_rule': 'the copy with the best validation score' if seed is None else 'picked by hand because it trades in this year', 'market': market_name, 'cost_per_side': market.cost, 'year': year, 'seed': seed,
         'positions': list(market.positions), 'inputs': list(ev.INPUTS),
         'labels': [LABELS.get(n, n) for n in ev.INPUTS],
         'train_range': metas[k]['train_range'], 'val_range': metas[k]['val_range'],
@@ -108,5 +119,6 @@ if __name__ == '__main__':
     ap.add_argument('--variant', default='ind')
     ap.add_argument('--market', default='perp')
     ap.add_argument('--year', type=int, default=2026)
+    ap.add_argument('--seed', type=int, help='default: the seed with the best validation score')
     a = ap.parse_args()
-    main(a.variant, a.market, a.year)
+    main(a.variant, a.market, a.year, seed=a.seed)

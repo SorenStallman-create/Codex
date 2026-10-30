@@ -160,6 +160,56 @@ indicators carry almost no information about the next few hours.
 through real 2026 test days bar by bar. It shows every input, both hidden layers, the strongest
 weight × activation flows, the action probabilities, and the inputs behind each decision.
 
+## Round 5: all Mosaic data plus derivatives, sentiment and on-chain data (pre-registered)
+
+Exchange APIs are blocked from the research container, so the new data comes from public
+GitHub mirrors (`ext_data.py` lists sources and licences):
+- Hourly Binance perp and spot data, funding rates from 5 venues, and open interest (2020 to 2026-03-06).
+- Daily liquidations, taker buy/sell ratio, Coinbase premium, exchange and stablecoin flows (from 2022-12).
+- The daily Fear & Greed index (from 2018).
+
+The remaining Mosaic indicators were added too: Andean 35, Laguerre 0.5 and McGinley 20 at 15
+minutes and 4 hours. That makes 68 market inputs. No usable order-book history was found.
+
+Following the Mosaic research rules, the pass bar was written and SHA-256 locked before any
+test year was scored (`prereg/ROUND5_PREREG.md`, `prereg/LOCKLOG.md`). It counts as one more
+trial in `prereg/TRIALS.md`, which held 160 trials before this round. Sessions run from
+2020-01-08 to 2026-03-05, so training windows are shorter than in rounds 1–4.
+
+**What the new data says on its own** (`artifacts/ic_scan_ext.json`):
+- **Funding rate, perp premium and Fear & Greed lean contrarian** over the rest of the day: rank IC of about −0.02 to −0.04, with the same sign in 5–6 of 6 years. High funding and greed are followed by slightly weaker returns.
+- **Open interest, liquidations and on-chain flows** show no consistent sign.
+- **The Mosaic indicators at 15 minutes** point to fading the last few hours (IC −0.04 to −0.07), the same pattern as round 4.
+
+**Pre-registered gates, real fees, pooled 2021-01-01 to 2026-03-05** (`artifacts/prereg_ext.json`):
+
+| Gate | Spot (no shorting, Mosaic-compliant) | Perp (research only) |
+|---|---|---|
+| Mean %/day, 95% CI | −0.024 (−0.054 … +0.009) | −0.000 (−0.011 … +0.012) |
+| 1. Lower bound > 0 | fail | fail |
+| 2. Beats intraday buy & hold | pass (by staying mostly flat) | fail |
+| 3. Above 95th percentile of 200 random-timing placebos | fail (89.5th) | fail (72.5th) |
+| 4. Positive in 4 of 6 years | fail (2 of 6) | fail (2 of 6) |
+| 5. Positive at 10 and 25 bp/side | fail (+0.003 / −0.037) | fail |
+| **Passes** | **no** | **no** |
+
+After tax (29.75% on positive years), spot made +7.3% in 2021 and +0.8% in 2022, then lost
+17.6% in 2023, 31.4% in 2025 and 2.9% in early 2026. 2024 was flat.
+
+With zero fees, the 68-input network still finds the short-term fade:
+- Perp: +0.281%/day (+0.162 … +0.406), positive in every year.
+- Spot: +0.210%/day.
+
+Both are *below* round 4's 44-input zero-fee result (+0.451%/day on perp). The extra data did
+not add usable signal at the 15-minute scale, and the shorter training window cost more than
+the new inputs gave. The real-fee networks again learned to trade rarely; the spot one trades
+about 0.27 times a day.
+
+**Verdict:** nothing passes, so leverage stays off. The crowding inputs (funding, premium,
+Fear & Greed) are the only new information with a consistent sign. Their effect plays out over
+the rest of the day, not the next 15 minutes. The only way to test them honestly is with
+fewer, longer holds and a forward paper log, because the hourly mirror ends in March 2026.
+
 ## What would change the verdict
 
 - Lower real costs: maker rebates or VIP fee tiers, which only matter with fill-rate data.

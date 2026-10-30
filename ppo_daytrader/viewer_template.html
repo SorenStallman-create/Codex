@@ -160,8 +160,10 @@ const GROUPS = [
   ['PRICE ACTION', n => /^(r1|r4|r16|r64|r_day|r_prev_day|dev16|dev96|clv)$/.test(n)],
   ['VOLATILITY & VOLUME', n => /^(vol16_rel|vol96_rel|range_rel|volu_z|vwap_dev|obv_slope)$/.test(n)],
   ['CALENDAR', n => /^(tod|dow)_/.test(n)],
-  ['15-MIN GUARD INDICATORS', n => n.startsWith('m15_')],
-  ['4-HOUR GUARD INDICATORS', n => n.startsWith('h4_')],
+  ['15-MIN MOSAIC INDICATORS', n => n.startsWith('m15_')],
+  ['4-HOUR MOSAIC INDICATORS', n => n.startsWith('h4_')],
+  ['DERIVATIVES (FUNDING, PREMIUM, OPEN INTEREST)', n => /^(fund_|basis_|oi_|perp_)/.test(n)],
+  ['SENTIMENT & ON-CHAIN (DAILY)', n => /^(fear_greed|liq_|taker_ratio|cb_premium|exch_netflow|stable_ratio|onchain)/.test(n)],
   ['AGENT STATE', n => /^(position|time_left|unreal)$/.test(n)],
 ];
 
@@ -298,7 +300,7 @@ function pickSession(i) { SI = i; document.querySelectorAll('#days .chip').forEa
 function pickModel(i) {
   MI = i; const m = M();
   document.querySelectorAll('#models .chip').forEach((c, k) => c.setAttribute('aria-pressed', k === i));
-  document.getElementById('model-note').textContent = `${m.title}. Trained ${m.train_range[0]} to ${m.train_range[1]}, checkpoint picked on ${m.val_range[0]} to ${m.val_range[1]}. Shown: seed ${m.seed}, the copy with the best validation score, playing on its own. Over all ${m.year_stats.days} test days of ${m.year} it averaged ${fmt(m.year_stats.mean_day_pct, 3)}% a day with ${m.year_stats.trades_per_day.toFixed(2)} trades a day.`;
+  document.getElementById('model-note').textContent = `${m.title}. Trained ${m.train_range[0]} to ${m.train_range[1]}, checkpoint picked on ${m.val_range[0]} to ${m.val_range[1]}. Shown: seed ${m.seed}, ${m.seed_rule || 'the copy with the best validation score'}, playing on its own. Over all ${m.year_stats.days} test days of ${m.year} it averaged ${fmt(m.year_stats.mean_day_pct, 3)}% a day with ${m.year_stats.trades_per_day.toFixed(2)} trades a day.`;
   document.getElementById('kicker').textContent = `BTC/USD · 15-minute bars · ${m.inputs.length} inputs · paper only`;
   document.getElementById('days').innerHTML = m.sessions.map((s, k) => `<button class="chip" aria-pressed="false">${esc(s.tag)}<small>${s.day} · ${fmt(s.day_ret_pct, 2)}%</small></button>`).join('');
   document.querySelectorAll('#days .chip').forEach((c, k) => c.onclick = () => { stop(); pickSession(k) });

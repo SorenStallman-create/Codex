@@ -47,6 +47,13 @@ python3 ic_scan.py && python3 rules_scan.py
 python3 walkforward.py train --variant ind     # 72 runs (real and zero fees), ~40 min
 python3 walkforward.py evaluate --variant ind
 python3 export_viewer.py --variant ind --market perp_nofee --year 2026 && python3 build_viewer.py
+git clone --depth 1 https://github.com/PietroC21/Crypto-PerpetualFutures ../../data_src/ext/Crypto-PerpetualFutures
+git clone --depth 1 https://github.com/ErcinDedeoglu/crypto-market-data ../../data_src/ext/crypto-market-data
+git clone --depth 1 https://github.com/akpasz/btc-data ../../data_src/ext/btc-data
+pip install pyarrow
+python3 ext_data.py                            # round 5 inputs
+python3 walkforward.py train --variant ext && python3 walkforward.py evaluate --variant ext
+python3 prereg_check.py --variant ext          # pre-registered gates (prereg/)
 python3 build_report.py                        # artifacts/report.html
 python3 -m unittest tests.test_ppo_daytrader   # from the repo root
 ```

@@ -1,0 +1,123 @@
+{
+ "variant": "ext",
+ "markets": {
+  "spot": {
+   "mean_day_pct": -0.023834013942827387,
+   "ci95": [
+    -0.0536708765686028,
+    0.008641319492137976
+   ],
+   "vs_bh_ci95": [
+    0.15876295488179892,
+    0.4214766542383975
+   ],
+   "trades_per_day": 0.2680301399354144,
+   "placebo_percentile": 89.5,
+   "placebo_mean_day_pct": -0.04270074076777208,
+   "placebo_p95_day_pct": -0.018246049412263276,
+   "by_year_pct_day": {
+    "2021": 0.03015040786167812,
+    "2022": 0.002985957358498557,
+    "2023": -0.04955915613841549,
+    "2024": 0.0,
+    "2025": -0.10024303585625123,
+    "2026": -0.04499495860564188
+   },
+   "cost10_mean_day_pct": 0.003012881372791881,
+   "cost25_mean_day_pct": -0.037244741315820985,
+   "yearly_tax": {
+    "2021": {
+     "before_tax_pct": 10.45949471914167,
+     "after_tax_pct": 7.347795040197023
+    },
+    "2022": {
+     "before_tax_pct": 1.0779306064179872,
+     "after_tax_pct": 0.7572462510086361
+    },
+    "2023": {
+     "before_tax_pct": -17.55206689790788,
+     "after_tax_pct": -17.55206689790788
+    },
+    "2024": {
+     "before_tax_pct": 0.0,
+     "after_tax_pct": 0.0
+    },
+    "2025": {
+     "before_tax_pct": -31.38644652981575,
+     "after_tax_pct": -31.38644652981575
+    },
+    "2026": {
+     "before_tax_pct": -2.9305894260361565,
+     "after_tax_pct": -2.9305894260361565
+    }
+   },
+   "gates": {
+    "1_mean_ci_above_zero": false,
+    "2_beats_intraday_bh": true,
+    "3_placebo_rank_95": false,
+    "4_positive_years_4_of_6": false,
+    "5_positive_at_10_and_25bp": false
+   },
+   "passes_all": false
+  },
+  "perp": {
+   "mean_day_pct": -0.0004161099685439649,
+   "ci95": [
+    -0.010542346929366767,
+    0.012340037273653575
+   ],
+   "vs_bh_ci95": [
+    -0.09097590236337257,
+    0.19650154331930306
+   ],
+   "trades_per_day": 0.060279870828848225,
+   "placebo_percentile": 72.5,
+   "placebo_mean_day_pct": -0.005215796137781476,
+   "placebo_p95_day_pct": 0.010640947102859372,
+   "by_year_pct_day": {
+    "2021": -0.007832005727392285,
+    "2022": 0.005733755560910562,
+    "2023": 0.0,
+    "2024": 0.0,
+    "2025": 0.0,
+    "2026": 0.0
+   },
+   "cost10_mean_day_pct": -0.0028561736896988987,
+   "cost25_mean_day_pct": -0.01196486219133277,
+   "yearly_tax": {
+    "2021": {
+     "before_tax_pct": -3.221123086955835,
+     "after_tax_pct": -3.221123086955835
+    },
+    "2022": {
+     "before_tax_pct": 1.4379149319877493,
+     "after_tax_pct": 1.4379149319877493
+    },
+    "2023": {
+     "before_tax_pct": 0.0,
+     "after_tax_pct": 0.0
+    },
+    "2024": {
+     "before_tax_pct": 0.0,
+     "after_tax_pct": 0.0
+    },
+    "2025": {
+     "before_tax_pct": 0.0,
+     "after_tax_pct": 0.0
+    },
+    "2026": {
+     "before_tax_pct": 0.0,
+     "after_tax_pct": 0.0
+    }
+   },
+   "gates": {
+    "1_mean_ci_above_zero": false,
+    "2_beats_intraday_bh": false,
+    "3_placebo_rank_95": false,
+    "4_positive_years_4_of_6": false,
+    "5_positive_at_10_and_25bp": false
+   },
+   "passes_all": false
+  }
+ }
+}

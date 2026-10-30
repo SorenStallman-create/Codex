@@ -14,6 +14,7 @@ from data import FEATURES, STATE, CONTEXT, SEQ_CHANNELS, SEQ_LEN
 
 INPUTS = FEATURES + STATE
 INPUTS_IND = FEATURES + __import__('indicators').IND_FEATURES + STATE
+INPUTS_EXT = INPUTS_IND[:-len(STATE)] + __import__('ext_data').EXT_FEATURES + STATE
 INPUTS_DEEP = FEATURES + CONTEXT + [f'{c}@t-{SEQ_LEN - k}' for c in SEQ_CHANNELS for k in range(SEQ_LEN)] + STATE
 
 

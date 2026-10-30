@@ -65,6 +65,13 @@
       "seeds": "[11, 22, 33]",
       "updates": "400",
       "markets": "['spot', 'perp', 'spot_nofee', 'perp_nofee']"
+    },
+    "ext": {
+      "models": "/home/claude/codex/ppo_daytrader/artifacts/models_ext",
+      "arch": "mlp",
+      "seeds": "[11, 22, 33]",
+      "updates": "400",
+      "markets": "['spot', 'perp', 'spot_nofee', 'perp_nofee']"
     }
   }
 }

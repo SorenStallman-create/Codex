@@ -8,7 +8,7 @@ import torch
 
 from data import OUT, FEATURES, CONTEXT, SEQ_CHANNELS, SEQ_LEN, STATE, load_sessions
 from env import MARKETS, bar_returns, run_policy, resample
-from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, INPUTS_IND, policy_fn
+from ppo import ActorCritic, DeepActorCritic, INPUTS, INPUTS_DEEP, INPUTS_IND, INPUTS_EXT, policy_fn
 from walkforward import PROTOCOL, VARIANTS, fold_list, sessions_for
 
 VARIANT, MODELS, SEEDS = 'mlp', VARIANTS['mlp']['models'], VARIANTS['mlp']['seeds']
@@ -19,9 +19,9 @@ MF = list(FEATURES)  # market inputs the linear baseline and policy surface read
 def set_variant(v):
     global VARIANT, MODELS, SEEDS, INPUTS, F, MF
     VARIANT, MODELS, SEEDS = v, VARIANTS[v]['models'], VARIANTS[v]['seeds']
-    INPUTS = {'deep': INPUTS_DEEP, 'ind': INPUTS_IND}.get(v, FEATURES + STATE)
+    INPUTS = {'deep': INPUTS_DEEP, 'ind': INPUTS_IND, 'ext': INPUTS_EXT}.get(v, FEATURES + STATE)
     F = {n: i for i, n in enumerate(INPUTS)}
-    MF = INPUTS[:-len(STATE)] if v == 'ind' else list(FEATURES)
+    MF = INPUTS[:-len(STATE)] if v in ('ind', 'ext') else list(FEATURES)
 
 
 def groups():
@@ -255,9 +255,10 @@ def inspect(market, year, models, sess, days, played):  # noqa: C901
 
 def main(variant='mlp'):
     set_variant(variant)
-    if variant == 'ind':
+    if variant in ('ind', 'ext'):
         from rules_scan import RULES, state_rule  # noqa: F401  (module-level names used above)
         globals().update(RULES=RULES, state_rule=state_rule)
+        import rules_scan; rules_scan.F = F  # rules read columns by name in this variant's input order
     sess = sessions_for(variant); fl = fold_list(variant, sess['days'])
     PD = VARIANTS[variant].get('period_days', 1)
     out = {'protocol': PROTOCOL, 'variant': variant, 'inputs': list(groups()), 'markets': {}}
@@ -291,7 +292,7 @@ def main(variant='mlp'):
                 **({'breakout_guard_4h': run_policy(market, sess, days, state_rule(market, **RULES['breakout_guard_4h'])),
                     'trend_guard_4h': run_policy(market, sess, days, state_rule(market, **RULES['trend_guard_4h'])),
                     'trend_4h_dip_15m': run_policy(market, sess, days, state_rule(market, **RULES['trend_4h_dip_15m']))}
-                   if VARIANT == 'ind' else {}),
+                   if VARIANT in ('ind', 'ext') else {}),
                 'linear_forecast': run_policy(market, sess, days, linear_rule(market, pred)),
                 'random_matched': run_policy(market, sess, days, random_matched(market, sw, np.random.default_rng(y))),
             }
