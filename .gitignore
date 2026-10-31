@@ -48,3 +48,7 @@ research/intraday_v2/
 research/repaired_replay/
 research/roh_guide_v1/
 research/weekly_*/
+
+# PPO day trader: rebuilt from the Bitstamp mirror by ppo_daytrader/data.py
+ppo_daytrader/artifacts/sessions*
+ppo_daytrader/artifacts/viewer_*.json
