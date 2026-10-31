@@ -249,6 +249,22 @@ roughly doubles the 24h edge (60 bp vs 24–26 bp). Hour of day is noise (13–6
 volatile markets. Nothing passes the locked test. The next honest step is to freeze one rule and log it
 forward on paper; that needs a live BTC feed, which this environment's network policy blocks.
 
+## Round 7: IBIT forward paper test, stage 1 (pre-registered)
+
+Soren chose a forward paper log on IBIT through Equibles, the only live BTC price reachable here (US
+weekdays, no intraday history, no funding or open interest). `prereg/ROUND7_PREREG.md` locked a
+price-only 4h rule (top 10% of signals, long only, New York 08:00-16:00) and a historical gate the
+rule had to clear on BTC 2025-01 to 2026-10 before the log could start. `flash_ibit.py` ran it once.
+
+| Trades | Gross per trade | Hit rate | Net at 10 bp/side | Placebo rank | 2025 | 2026 |
+|---|---|---|---|---|---|---|
+| 261 | +5.6 bp | 52% | −14.4 bp | 72% | −1.2 bp | +13.3 bp |
+
+**Verdict:** fails the gate (needed at least 10 bp gross and a 90% placebo rank), so the log does not
+start. The Round 6 lead depended on funding, open interest and the other non-price inputs, which an
+IBIT feed can't supply. `flash_ibit.py step` and `status` are written and ready if a better rule
+passes later.
+
 ## What would change the verdict
 
 - Lower real costs: maker rebates or VIP fee tiers, which only matter with fill-rate data.
